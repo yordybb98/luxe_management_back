@@ -6,7 +6,7 @@ import {
   Body,
   Param,
   Put,
-  BadRequestException,
+  NotFoundException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
@@ -23,7 +23,7 @@ export class OrderController {
   @Get(':id')
   async getOrderById(@Param('id') id: string): Promise<Order> {
     const orderFound = await this.orderService.getOrderById(Number(id));
-    if (!orderFound) throw new BadRequestException('Order does not exist');
+    if (!orderFound) throw new NotFoundException('Order not found');
     return orderFound;
   }
 
@@ -37,11 +37,19 @@ export class OrderController {
     @Param('id') id: string,
     @Body() data: Order,
   ): Promise<Order> {
-    return this.orderService.updateOrder(Number(id), data);
+    try {
+      return await this.orderService.updateOrder(Number(id), data);
+    } catch (err) {
+      throw new NotFoundException("Order doesn't exist");
+    }
   }
 
   @Delete(':id')
   async deleteOrder(@Param('id') id: string): Promise<Order> {
-    return this.orderService.deleteOrder(Number(id));
+    try {
+      return await this.orderService.deleteOrder(Number(id));
+    } catch (err) {
+      throw new NotFoundException("Order doesn't exist");
+    }
   }
 }
