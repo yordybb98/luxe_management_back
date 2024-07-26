@@ -35,9 +35,8 @@ export class OrderController {
   @Post()
   async createOrder(@Body() data: Order): Promise<Order> {
     if (!data.userId) throw new BadRequestException('You must provide userId');
-    const user = this.usersService.getUserById(data.userId);
+    const user = await this.usersService.getUserById(data.userId);
     if (!user) throw new NotFoundException('User provided not found');
-
     return this.orderService.createOrder(data);
   }
 
