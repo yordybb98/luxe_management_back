@@ -7,13 +7,18 @@ import {
   Param,
   Put,
   NotFoundException,
+  BadRequestException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
+import { UserService } from 'src/user/user.service';
 
 @Controller('orders')
 export class OrderController {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly usersService: UserService,
+  ) {}
 
   @Get()
   async getAllOrders(): Promise<Order[]> {
@@ -29,6 +34,10 @@ export class OrderController {
 
   @Post()
   async createOrder(@Body() data: Order): Promise<Order> {
+    if (!data.userId) throw new BadRequestException('You must provide userId');
+    const user = this.usersService.getUserById(data.userId);
+    if (!user) throw new NotFoundException('User provided not found');
+
     return this.orderService.createOrder(data);
   }
 
