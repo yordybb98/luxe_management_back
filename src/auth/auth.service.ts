@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
 import { SignInResponseDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -18,12 +19,13 @@ export class AuthService {
     }
 
     //checking if password is correct
-    if (user?.password !== pass) {
+    const isPasswordValid = await bcrypt.compareSync(pass, user.password);
+    if (!isPasswordValid) {
       throw new UnauthorizedException('Wrong credentials');
     }
 
     //removing password from response
-    const { password, ...result } = user;
+    const { password, id, ...result } = user;
 
     //contructing token data
     const payload = { sub: user.id, username: user.username };

@@ -14,7 +14,6 @@ export class SignInDto {
 }
 
 export class SignInResponseDto {
-  id: number;
   name: string;
   username: string;
   email: string;
