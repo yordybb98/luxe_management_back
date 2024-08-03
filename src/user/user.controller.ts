@@ -6,8 +6,8 @@ import {
   Get,
   NotFoundException,
   Param,
+  Patch,
   Post,
-  Put,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -59,7 +59,7 @@ export class UserController {
     return rest;
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updateUser(@Param('id') id: string, @Body() data: User): Promise<User> {
     try {
       return await this.userService.updateUser(Number(id), data);

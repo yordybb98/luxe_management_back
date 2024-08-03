@@ -5,9 +5,9 @@ import {
   Delete,
   Body,
   Param,
-  Put,
   NotFoundException,
   BadRequestException,
+  Patch,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
@@ -42,7 +42,7 @@ export class OrderController {
     return this.orderService.createOrder(data);
   }
 
-  @Put(':id')
+  @Patch(':id')
   async updateOrder(
     @Param('id') id: string,
     @Body() data: Order,
