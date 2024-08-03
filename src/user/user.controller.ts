@@ -14,7 +14,9 @@ import { User } from '@prisma/client';
 import { CreateUserDto } from './dto/createUserDto';
 import * as bcrypt from 'bcrypt';
 import { PublicUserData } from './dto/publicUserData';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('users')
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}

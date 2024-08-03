@@ -12,7 +12,9 @@ import {
 import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('orders')
 @Controller('orders')
 export class OrderController {
   constructor(
