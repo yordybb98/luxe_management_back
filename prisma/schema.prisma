@@ -16,10 +16,11 @@ model User {
   username     String       @unique
   email        String       @unique
   password     String
-  role         String
   orders       Order[]
   department   Department   @relation(fields: [departmentId], references: [id])
   departmentId Int
+  role         Role         @relation(fields: [roleId], references: [id])
+  roleId       Int
   projects     Project[]    @relation("Assignments")
   permissions  Permission[] @relation("UserAccess")
 }
@@ -74,4 +75,5 @@ model Role {
   name        String
   description String
   permissions Permission[] @relation("RolePermissions")
+  users       User[]
 }

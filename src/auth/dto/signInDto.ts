@@ -17,6 +17,7 @@ export class SignInResponseDto {
   name: string;
   username: string;
   email: string;
-  role: string;
+  departmentId: number;
+  roleId: number;
   token: string;
 }

@@ -35,10 +35,34 @@ export class UserService {
     });
   }
 
-  async createUser(data: CreateUserDto): Promise<User> {
-    return this.prisma.user.create({
-      data,
-    });
+  async createUser(data: CreateUserDto) {
+    try {
+      const newUser = await this.prisma.user.create({
+        data: {
+          name: data.name,
+          username: data.username,
+          email: data.email,
+          password: data.password,
+          department: {
+            connect: { id: data.departmentId },
+          },
+          role: {
+            connect: { id: data.roleId },
+          },
+          projects: {
+            connect: data.projects.map((id) => ({ id })),
+          },
+          permissions: {
+            connect: data.permissions.map((id) => ({ id })),
+          },
+        },
+      });
+
+      return newUser;
+    } catch (error) {
+      console.error('Error creating user:', error);
+      throw new Error('Failed to create user');
+    }
   }
 
   async updateUser(id: number, data: User): Promise<User> {
