@@ -8,6 +8,7 @@ import {
   Param,
   Post,
   Put,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
@@ -15,6 +16,7 @@ import { CreateUserDto } from './dto/createUserDto';
 import * as bcrypt from 'bcrypt';
 import { PublicUserData } from './dto/publicUserData';
 import { ApiTags } from '@nestjs/swagger';
+import { AuthGuard } from 'src/auth/guards/auth.guard';
 
 @ApiTags('users')
 @Controller('users')
@@ -32,6 +34,7 @@ export class UserController {
   }
 
   @Get(':id')
+  @UseGuards(AuthGuard)
   async getUserById(@Param('id') id: string): Promise<User> {
     const userFound = await this.userService.getUserById(Number(id));
     if (!userFound) throw new NotFoundException('User not found');
