@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { UserService } from './user.service';
 import { User } from '@prisma/client';
+import { createUserDto } from './dto/createUserDto';
 
 @Controller('users')
 export class UserController {
@@ -28,7 +30,7 @@ export class UserController {
   }
 
   @Post()
-  async createUser(@Body() data: User): Promise<User> {
+  async createUser(@Body() data: createUserDto): Promise<User> {
     return this.userService.createUser(data);
   }
 
