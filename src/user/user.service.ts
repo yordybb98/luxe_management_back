@@ -21,6 +21,10 @@ export class UserService {
       where: {
         id,
       },
+      include: {
+        department: true,
+        role: true,
+      },
     });
   }
 
