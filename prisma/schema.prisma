@@ -21,19 +21,20 @@ model User {
   departmentId Int
   role         Role         @relation(fields: [roleId], references: [id])
   roleId       Int
-  projects     Project[]    @relation("Assignments")
   permissions  Permission[] @relation("UserAccess")
 }
 
 model Order {
-  id               Int    @id @default(autoincrement())
-  name             String
-  phone            String
-  address          String
-  orderDescription String
-  status           String
-  userAssigned     User   @relation(fields: [userId], references: [id])
-  userId           Int
+  id           Int      @id @default(autoincrement())
+  name         String
+  phone        String
+  address      String
+  description  String
+  status       String
+  userAssigned User     @relation(fields: [userId], references: [id])
+  userId       Int
+  project      Project? @relation(fields: [projectId], references: [id])
+  projectId    Int?
 }
 
 model Department {
@@ -54,11 +55,11 @@ model Client {
 }
 
 model Project {
-  id          Int    @id @default(autoincrement())
+  id          Int     @id @default(autoincrement())
   name        String
   description String
-  users       User[] @relation("Assignments")
-  client      Client @relation(fields: [clientId], references: [id])
+  orders      Order[]
+  client      Client  @relation(fields: [clientId], references: [id])
   clientId    Int
 }
 
