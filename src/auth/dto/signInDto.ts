@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNumber, IsString, Min, MinLength } from 'class-validator';
 
 export class SignInDto {
   @IsString()
@@ -13,6 +13,34 @@ export class SignInDto {
   password: string;
 }
 
+export class SignUpDto {
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @MinLength(3)
+  username: string;
+
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @MinLength(8)
+  password: string;
+
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @MinLength(3)
+  name: string;
+
+  @IsEmail()
+  email: string;
+
+  @IsNumber()
+  @MinLength(1)
+  roleId: number;
+
+  @IsNumber()
+  @MinLength(1)
+  departmentId: number;
+}
+
 export class SignInResponseDto {
   name: string;
   username: string;
@@ -20,4 +48,15 @@ export class SignInResponseDto {
   departmentId: number;
   roleId: number;
   token: string;
+}
+
+export class SignUpResponseDto {
+  name: string;
+  username: string;
+  email: string;
+  departmentId: number;
+  roleId: number;
+  orders: [];
+  projects: [];
+  permissions: [];
 }
