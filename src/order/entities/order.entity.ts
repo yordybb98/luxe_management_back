@@ -5,7 +5,7 @@ export class Order {
   name: string;
   phone: string;
   address: string;
-  orderDescription: string;
+  description: string;
   status: string;
-  userAssigned: User;
+  userId: User;
 }

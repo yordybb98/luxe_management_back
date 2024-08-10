@@ -13,9 +13,11 @@ import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
+import { CreateUserDto } from 'src/user/dto/createUserDto';
+import { CreateOrderDto } from './dto/create-order.dto';
 
-@ApiTags('orders')
-@Controller('orders')
+@ApiTags('order')
+@Controller('order')
 export class OrderController {
   constructor(
     private readonly orderService: OrderService,
@@ -35,10 +37,11 @@ export class OrderController {
   }
 
   @Post()
-  async createOrder(@Body() data: Order): Promise<Order> {
-    if (!data.userId) throw new BadRequestException('You must provide userId');
+  async createOrder(@Body() data: CreateOrderDto): Promise<Order> {
+    //checking if user exists
     const user = await this.usersService.getUserById(data.userId);
-    if (!user) throw new NotFoundException('User provided not found');
+    if (!user) throw new BadRequestException('User not found');
+
     return this.orderService.createOrder(data);
   }
 
