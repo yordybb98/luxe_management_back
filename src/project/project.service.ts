@@ -1,26 +1,61 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ProjectService {
-  create(createProjectDto: CreateProjectDto) {
-    return 'This action adds a new project';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createProject(data: CreateProjectDto) {
+    const clientExists = await this.prisma.client.findUnique({
+      where: {
+        id: data.clientId,
+      },
+    });
+    if (!clientExists) {
+      throw new BadRequestException('Client not found');
+    }
+
+    return await this.prisma.project.create({
+      data: {
+        name: data.name,
+        description: data.description,
+        client: {
+          connect: {
+            id: data.clientId,
+          },
+        },
+      },
+      include: {
+        client: true,
+      },
+    });
   }
 
-  findAll() {
-    return `This action returns all project`;
+  async getAllProjects() {
+    return await this.prisma.project.findMany({
+      include: {
+        client: true,
+      },
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} project`;
+  async getProjectById(id: number) {
+    return await this.prisma.project.findUnique({
+      where: { id },
+      include: { client: true },
+    });
   }
 
-  update(id: number, updateProjectDto: UpdateProjectDto) {
-    return `This action updates a #${id} project`;
+  async updateProject(id: number, data: UpdateProjectDto) {
+    return await this.prisma.project.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} project`;
+  async deleteProject(id: number) {
+    return await this.prisma.project.delete({ where: { id } });
   }
 }

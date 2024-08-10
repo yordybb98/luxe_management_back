@@ -18,27 +18,30 @@ export class ProjectController {
   constructor(private readonly projectService: ProjectService) {}
 
   @Post()
-  create(@Body() createProjectDto: CreateProjectDto) {
-    return this.projectService.create(createProjectDto);
+  createProject(@Body() createProjectDto: CreateProjectDto) {
+    return this.projectService.createProject(createProjectDto);
   }
 
   @Get()
-  findAll() {
-    return this.projectService.findAll();
+  getAllProjects() {
+    return this.projectService.getAllProjects();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.projectService.findOne(+id);
+  getProjectById(@Param('id') id: string) {
+    return this.projectService.getProjectById(+id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateProjectDto: UpdateProjectDto) {
-    return this.projectService.update(+id, updateProjectDto);
+  updateProject(
+    @Param('id') id: string,
+    @Body() updateProjectDto: UpdateProjectDto,
+  ) {
+    return this.projectService.updateProject(+id, updateProjectDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.projectService.remove(+id);
+  deleteProject(@Param('id') id: string) {
+    return this.projectService.deleteProject(+id);
   }
 }
