@@ -1,26 +1,33 @@
 import { Injectable } from '@nestjs/common';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { Department } from '@prisma/client';
 
 @Injectable()
 export class DepartmentService {
-  create(createDepartmentDto: CreateDepartmentDto) {
-    return 'This action adds a new department';
+  constructor(private readonly prisma: PrismaService) {}
+
+  async createDepartment(data: CreateDepartmentDto) {
+    return await this.prisma.department.create({ data });
   }
 
-  findAll() {
-    return `This action returns all department`;
+  async getAllDepartments(): Promise<Department[]> {
+    return this.prisma.department.findMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} department`;
+  async getDepartmentById(id: number) {
+    return this.prisma.department.findUnique({ where: { id } });
   }
 
-  update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    return `This action updates a #${id} department`;
+  async updateDepartment(id: number, data: UpdateDepartmentDto) {
+    return await this.prisma.department.update({
+      where: { id },
+      data,
+    });
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} department`;
+  async removeDepartment(id: number) {
+    return await this.prisma.department.delete({ where: { id } });
   }
 }
