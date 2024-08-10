@@ -1,13 +1,21 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { UserService } from 'src/user/user.service';
-import { SignInResponseDto } from './dto/signInDto';
+import { SignInResponseDto, SignUpResponseDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { RoleService } from 'src/role/role.service';
+import { DepartmentService } from 'src/department/department.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UserService,
+    private readonly roleService: RoleService,
+    private readonly departmentService: DepartmentService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -28,9 +36,50 @@ export class AuthService {
     const { password, id, ...result } = user;
 
     //contructing token data
-    const payload = { sub: user.id, username: user.username };
+    const payload = { sub: user.id, email: user.email, role: user.roleId };
 
     //signing token
     return { ...result, token: await this.jwtService.signAsync(payload) };
+  }
+
+  async signUp(
+    username: string,
+    password: string,
+    name: string,
+    email: string,
+    roleId: number,
+    departmentId: number,
+  ): Promise<SignUpResponseDto> {
+    const role = await this.roleService.getRoleById(roleId);
+    if (!role) {
+      throw new BadRequestException('Role not found');
+    }
+
+    const department =
+      await this.departmentService.getDepartmentById(departmentId);
+    if (!department) {
+      throw new BadRequestException('Department not found');
+    }
+
+    await this.usersService.createUser({
+      username,
+      password: await bcrypt.hash(password, 10),
+      name,
+      email,
+      roleId,
+      departmentId,
+      orders: [],
+      permissions: [],
+    });
+    return {
+      username,
+      name,
+      email,
+      roleId,
+      departmentId,
+      orders: [],
+      projects: [],
+      permissions: [],
+    };
   }
 }
