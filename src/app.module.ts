@@ -7,8 +7,9 @@ import { PermissionModule } from './permission/permission.module';
 import { ProjectModule } from './project/project.module';
 import { ClientModule } from './client/client.module';
 import { DepartmentModule } from './department/department.module';
+import { StatusModule } from './status/status.module';
 @Module({
-  imports: [OrderModule, UserModule, AuthModule, RoleModule, PermissionModule, ProjectModule, ClientModule, DepartmentModule],
+  imports: [OrderModule, UserModule, AuthModule, RoleModule, PermissionModule, ProjectModule, ClientModule, DepartmentModule, StatusModule],
   controllers: [],
   providers: [],
 })
