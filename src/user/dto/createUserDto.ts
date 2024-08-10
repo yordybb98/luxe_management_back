@@ -1,6 +1,6 @@
 import { Department, Order, Permission, Project, Role } from '@prisma/client';
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNumber, IsString, MinLength } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
@@ -21,13 +21,13 @@ export class CreateUserDto {
   @MinLength(6)
   password: string;
 
+  @IsNumber()
   roleId: number;
 
+  @IsNumber()
   departmentId: number;
 
   orders: number[];
-
-  projects: number[];
 
   permissions: number[];
 }

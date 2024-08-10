@@ -17,18 +17,24 @@ import * as bcrypt from 'bcrypt';
 import { PublicUserData } from './dto/publicUserData';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
+import { RoleService } from 'src/role/role.service';
+import { DepartmentService } from 'src/department/department.service';
 
-@ApiTags('users')
-@Controller('users')
+@ApiTags('user')
+@Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly roleService: RoleService,
+    private readonly departmentService: DepartmentService,
+  ) {}
 
   @Get()
   async getAllUsers(): Promise<PublicUserData[]> {
     const users = await this.userService.getAllUsers();
 
     //removing sensitive data
-    const publicUsersData = users.map(({ password, id, ...rest }) => rest);
+    const publicUsersData = users.map(({ password, ...rest }) => rest);
 
     return publicUsersData;
   }
@@ -49,12 +55,29 @@ export class UserController {
       throw new BadRequestException('User already exists');
     }
 
+    //cheking if roleExists
+    const roleExists = await this.roleService.getRoleById(data.roleId);
+    if (!roleExists) {
+      throw new BadRequestException('Role not found');
+    }
+
+    //cheking if departmentExists
+    const departmentExists = await this.departmentService.getDepartmentById(
+      data.departmentId,
+    );
+    if (!departmentExists) {
+      throw new BadRequestException('Department not found');
+    }
+
     //hashing password
     data.password = await bcrypt.hash(data.password, 10);
 
+    //creating permissions
+    data.permissions = [];
+
     //creating user
     //removing sensitive data from response
-    const { password, id, ...rest } = await this.userService.createUser(data);
+    const { password, ...rest } = await this.userService.createUser(data);
 
     return rest;
   }

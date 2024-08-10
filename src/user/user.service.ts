@@ -8,7 +8,12 @@ export class UserService {
   constructor(private prisma: PrismaService) {}
 
   async getAllUsers(): Promise<User[]> {
-    return this.prisma.user.findMany();
+    return this.prisma.user.findMany({
+      include: {
+        department: true,
+        role: true,
+      },
+    });
   }
 
   async getUserById(id: number): Promise<User> {
@@ -23,6 +28,10 @@ export class UserService {
     return this.prisma.user.findUnique({
       where: {
         username,
+      },
+      include: {
+        department: true,
+        role: true,
       },
     });
   }
@@ -49,12 +58,14 @@ export class UserService {
           role: {
             connect: { id: data.roleId },
           },
-          projects: {
-            connect: data.projects.map((id) => ({ id })),
-          },
           permissions: {
             connect: data.permissions.map((id) => ({ id })),
           },
+        },
+        include: {
+          department: true,
+          role: true,
+          permissions: true,
         },
       });
 
