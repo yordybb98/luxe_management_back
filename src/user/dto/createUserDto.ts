@@ -18,7 +18,7 @@ export class CreateUserDto {
 
   @IsString()
   @Transform(({ value }) => value.toString().trim())
-  @MinLength(6)
+  @MinLength(1)
   password: string;
 
   @IsNumber()

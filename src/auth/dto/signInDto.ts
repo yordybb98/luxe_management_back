@@ -9,7 +9,7 @@ export class SignInDto {
 
   @IsString()
   @Transform(({ value }) => value.trim())
-  @MinLength(8)
+  @MinLength(1)
   password: string;
 }
 
@@ -21,7 +21,7 @@ export class SignUpDto {
 
   @IsString()
   @Transform(({ value }) => value.trim())
-  @MinLength(8)
+  @MinLength(1)
   password: string;
 
   @IsString()
