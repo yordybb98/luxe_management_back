@@ -1,5 +1,5 @@
 import { Transform } from 'class-transformer';
-import { IsNumber, IsString, MinLength } from 'class-validator';
+import { IsNumber, IsOptional, IsString, MinLength } from 'class-validator';
 
 export class CreateOrderDto {
   @IsString()
@@ -22,11 +22,13 @@ export class CreateOrderDto {
   @MinLength(3)
   description: string;
 
-  @IsString()
-  @Transform(({ value }) => value.trim())
-  @MinLength(3)
-  status: string;
+  @IsNumber()
+  statusId: number;
 
   @IsNumber()
   userId: number;
+
+  @IsNumber()
+  @IsOptional()
+  projectId: number;
 }

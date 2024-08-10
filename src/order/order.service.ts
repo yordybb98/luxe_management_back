@@ -8,7 +8,13 @@ export class OrderService {
   constructor(private prisma: PrismaService) {}
 
   async getAllOrders(): Promise<Order[]> {
-    return this.prisma.order.findMany({ include: { userAssigned: true } });
+    return this.prisma.order.findMany({
+      include: {
+        userAssigned: true,
+        status: true,
+        project: true,
+      },
+    });
   }
 
   async getOrderById(id: number): Promise<Order> {
@@ -18,6 +24,8 @@ export class OrderService {
       },
       include: {
         userAssigned: true,
+        status: true,
+        project: true,
       },
     });
   }
@@ -29,15 +37,28 @@ export class OrderService {
         phone: data.phone,
         address: data.address,
         description: data.description,
-        status: data.status,
         userAssigned: {
           connect: {
             id: data.userId,
           },
         },
+        status: {
+          connect: {
+            id: data.statusId,
+          },
+        },
+        ...(data.projectId && {
+          project: {
+            connect: {
+              id: data.projectId,
+            },
+          },
+        }),
       },
       include: {
         userAssigned: true,
+        status: true,
+        project: true,
       },
     });
   }
@@ -50,6 +71,8 @@ export class OrderService {
       data,
       include: {
         userAssigned: true,
+        status: true,
+        project: true,
       },
     });
   }

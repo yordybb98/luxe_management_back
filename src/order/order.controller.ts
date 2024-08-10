@@ -15,6 +15,7 @@ import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/createUserDto';
 import { CreateOrderDto } from './dto/create-order.dto';
+import { StatusService } from 'src/status/status.service';
 
 @ApiTags('order')
 @Controller('order')
@@ -22,6 +23,7 @@ export class OrderController {
   constructor(
     private readonly orderService: OrderService,
     private readonly usersService: UserService,
+    private readonly statusService: StatusService,
   ) {}
 
   @Get()
@@ -41,6 +43,10 @@ export class OrderController {
     //checking if user exists
     const user = await this.usersService.getUserById(data.userId);
     if (!user) throw new BadRequestException('User not found');
+
+    //checking if status exists
+    const status = await this.statusService.getStatusById(data.statusId);
+    if (!status) throw new BadRequestException('Status not found');
 
     return this.orderService.createOrder(data);
   }

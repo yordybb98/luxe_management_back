@@ -6,6 +6,6 @@ export class Order {
   phone: string;
   address: string;
   description: string;
-  status: string;
-  userId: User;
+  statusId: number;
+  userId: number;
 }
