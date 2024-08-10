@@ -18,30 +18,27 @@ export class PermissionController {
   constructor(private readonly permissionService: PermissionService) {}
 
   @Post()
-  create(@Body() createPermissionDto: CreatePermissionDto) {
-    return this.permissionService.create(createPermissionDto);
+  createPermission(@Body() createPermissionDto: CreatePermissionDto) {
+    return this.permissionService.createPermission(createPermissionDto);
   }
 
   @Get()
-  findAll() {
-    return this.permissionService.findAll();
+  getAllPermissions() {
+    return this.permissionService.getAllPermissions();
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.permissionService.findOne(+id);
+  getPermissionById(@Param('id') id: string) {
+    return this.permissionService.getPermissionById(+id);
   }
 
   @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updatePermissionDto: UpdatePermissionDto,
-  ) {
-    return this.permissionService.update(+id, updatePermissionDto);
+  updatePermission(@Param('id') id: string, @Body() data: UpdatePermissionDto) {
+    return this.permissionService.updatePermission(+id, data);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.permissionService.remove(+id);
+  deletePermission(@Param('id') id: string) {
+    return this.permissionService.deletePermission(+id);
   }
 }
