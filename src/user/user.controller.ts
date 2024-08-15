@@ -19,6 +19,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
 import { DepartmentService } from 'src/department/department.service';
+import { Role, Roles } from 'src/auth/decorators/roles.decorators';
 
 @ApiTags('user')
 @Controller('user')
@@ -30,6 +31,7 @@ export class UserController {
   ) {}
 
   @Get()
+  @Roles(Role.Admin)
   async getAllUsers(): Promise<PublicUserData[]> {
     const users = await this.userService.getAllUsers();
 

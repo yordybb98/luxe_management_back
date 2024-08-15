@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from '../constants';
-import { extractTokenFromHeader } from 'src/utils/utils';
+import {
+  extractTokenFromCookies,
+  extractTokenFromHeader,
+} from 'src/utils/utils';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from './public.guard';
 
@@ -18,7 +21,7 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
-    return true;
+    // return true;
     // We're checking if the request is public
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
@@ -29,7 +32,11 @@ export class AuthGuard implements CanActivate {
     }
 
     const request = context.switchToHttp().getRequest();
-    const token = extractTokenFromHeader(request);
+
+    // We can extract the token from the cookies or the header
+    const token = extractTokenFromCookies(request);
+    // const token = extractTokenFromHeader(request);
+
     if (!token) {
       throw new UnauthorizedException('Invalid token');
     }

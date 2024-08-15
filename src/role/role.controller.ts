@@ -11,6 +11,7 @@ import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { Role, Roles } from 'src/auth/decorators/roles.decorators';
 
 @Controller('role')
 @ApiTags('role')
@@ -23,6 +24,7 @@ export class RoleController {
   }
 
   @Get()
+  @Roles(Role.User)
   getAllRoles() {
     return this.roleService.getAllRoles();
   }
