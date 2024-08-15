@@ -60,3 +60,10 @@ export class SignUpResponseDto {
   projects: [];
   permissions: [];
 }
+
+export class ValidateTokenDto {
+  @IsString()
+  @Transform(({ value }) => value.trim())
+  @MinLength(1)
+  token: string;
+}

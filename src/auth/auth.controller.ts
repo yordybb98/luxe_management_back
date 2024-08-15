@@ -7,7 +7,7 @@ import {
   Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { SignInDto, SignUpDto } from './dto/signInDto';
+import { SignInDto, SignUpDto, ValidateTokenDto } from './dto/signInDto';
 import { ApiTags } from '@nestjs/swagger';
 import { Public } from './guards/public.guard';
 import { Response } from 'express';
@@ -60,5 +60,12 @@ export class AuthController {
       roleId,
       departmentId,
     );
+  }
+
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @Post('validateToken')
+  async validateToken(@Body() { token }: ValidateTokenDto) {
+    return this.authService.validateToken(token);
   }
 }

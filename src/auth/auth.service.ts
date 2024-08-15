@@ -82,4 +82,14 @@ export class AuthService {
       permissions: [],
     };
   }
+
+  async validateToken(token: string): Promise<boolean> {
+    try {
+      const validated = await this.jwtService.verifyAsync(token);
+      return !!validated;
+    } catch (err) {
+      return false;
+      // throw new UnauthorizedException('Invalid token');
+    }
+  }
 }
