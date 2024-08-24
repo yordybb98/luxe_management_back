@@ -34,8 +34,8 @@ export class AuthGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
 
     // We can extract the token from the cookies or the header
-    const token = extractTokenFromCookies(request);
-    // const token = extractTokenFromHeader(request);
+    //const token = extractTokenFromCookies(request);
+    const token = extractTokenFromHeader(request);
 
     if (!token) {
       throw new UnauthorizedException('Invalid token');

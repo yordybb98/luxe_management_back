@@ -26,15 +26,15 @@ export class AuthController {
   ) {
     const response = await this.authService.signIn(username, password);
 
-    const { token } = response;
+    /* const { token } = response; */
 
-    // Setting the cookie
+    /* // Setting the cookie
     res.cookie('authToken', token, {
       httpOnly: true,
       secure: false,
       maxAge: 3600000,
       sameSite: 'strict',
-    });
+    }); */
     return response;
   }
 

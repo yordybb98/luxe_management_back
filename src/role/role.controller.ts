@@ -24,7 +24,6 @@ export class RoleController {
   }
 
   @Get()
-  @Roles(Role.User)
   getAllRoles() {
     return this.roleService.getAllRoles();
   }

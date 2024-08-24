@@ -31,7 +31,6 @@ export class UserController {
   ) {}
 
   @Get()
-  @Roles(Role.Admin)
   async getAllUsers(): Promise<PublicUserData[]> {
     const users = await this.userService.getAllUsers();
 
