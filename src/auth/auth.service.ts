@@ -36,7 +36,7 @@ export class AuthService {
     const { password, id, ...result } = user;
 
     //contructing token data
-    const payload = { sub: user.id, email: user.email, role: user.role.name };
+    const payload = { sub: user.id, email: user.email, role: user.role };
 
     //signing token
     return { ...result, token: await this.jwtService.signAsync(payload) };
@@ -69,7 +69,6 @@ export class AuthService {
       roleId,
       departmentId,
       orders: [],
-      permissions: [],
     });
     return {
       username,

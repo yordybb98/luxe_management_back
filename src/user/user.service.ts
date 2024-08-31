@@ -56,9 +56,11 @@ export class UserService {
           username: data.username,
           email: data.email,
           password: data.password,
-          department: {
-            connect: { id: data.departmentId },
-          },
+          ...(data.departmentId && {
+            department: {
+              connect: { id: data.departmentId },
+            },
+          }),
           role: {
             connect: { id: data.roleId },
           },

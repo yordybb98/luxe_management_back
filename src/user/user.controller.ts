@@ -61,19 +61,19 @@ export class UserController {
       throw new BadRequestException('Role not found');
     }
 
-    //cheking if departmentExists
-    const departmentExists = await this.departmentService.getDepartmentById(
-      data.departmentId,
-    );
-    if (!departmentExists) {
-      throw new BadRequestException('Department not found');
+    //checking if Department was provided
+    if (data.departmentId) {
+      //cheking if departmentExists
+      const departmentExists = await this.departmentService.getDepartmentById(
+        data.departmentId,
+      );
+      if (!departmentExists) {
+        throw new BadRequestException('Department not found');
+      }
     }
 
     //hashing password
     data.password = await bcrypt.hash(data.password, 10);
-
-    //creating permissions
-    data.permissions = [];
 
     //creating user
     //removing sensitive data from response
