@@ -1,6 +1,49 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+//////////////////////////
+//////////ENUMS///////////
+//////////////////////////
+enum Permission {
+  ViewClients
+  CreateClients
+  UpdateClients
+  DeleteClients
+
+  ViewDepartments
+  CreateDepartments
+  UpdateDepartments
+  DeleteDepartments
+
+  ViewOrders
+  CreateOrders
+  UpdateOrders
+  DeleteOrders
+
+  ViewProjects
+  CreateProjects
+  UpdateProjects
+  DeleteProjects
+
+  ViewRoles
+  CreateRoles
+  UpdateRoles
+  DeleteRoles
+
+  ViewStatus
+  CreateStatus
+  UpdateStatus
+  DeleteStatus
+
+  ViewUsers
+  CreateUsers
+  UpdateUsers
+  DeleteUsers
+}
+
+///////////////////////////
+//////////MODELS///////////
+//////////////////////////
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,17 +54,16 @@ datasource db {
 }
 
 model User {
-  id           Int          @id @default(autoincrement())
+  id           Int         @id @default(autoincrement())
   name         String
-  username     String       @unique
-  email        String       @unique
+  username     String      @unique
+  email        String      @unique
   password     String
   orders       Order[]
-  department   Department   @relation(fields: [departmentId], references: [id])
-  departmentId Int
-  role         Role         @relation(fields: [roleId], references: [id])
+  department   Department? @relation(fields: [departmentId], references: [id])
+  departmentId Int?
+  role         Role        @relation(fields: [roleId], references: [id])
   roleId       Int
-  permissions  Permission[] @relation("UserAccess")
 }
 
 model Order {
@@ -70,18 +112,10 @@ model Project {
   clientId    Int
 }
 
-model Permission {
-  id          Int    @id @default(autoincrement())
-  name        String
-  description String
-  users       User[] @relation("UserAccess")
-  Role        Role[] @relation("RolePermissions")
-}
-
 model Role {
   id          Int          @id @default(autoincrement())
   name        String
   description String
-  permissions Permission[] @relation("RolePermissions")
+  permissions Permission[]
   users       User[]
 }

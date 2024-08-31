@@ -11,7 +11,7 @@ import {
   extractTokenFromHeader,
 } from 'src/utils/utils';
 import { Reflector } from '@nestjs/core';
-import { IS_PUBLIC_KEY } from './public.guard';
+import { IS_PUBLIC_KEY } from '../../common/guards/public.guard';
 
 @Injectable()
 export class AuthGuard implements CanActivate {

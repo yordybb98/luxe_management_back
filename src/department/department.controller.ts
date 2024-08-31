@@ -6,11 +6,14 @@ import {
   Patch,
   Param,
   Delete,
+  UseGuards,
 } from '@nestjs/common';
 import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { ApiTags } from '@nestjs/swagger';
+import { PermissionGuard } from 'src/common/guards/permission.guard';
+import { Permissions } from 'src/common/decorators/permissions.decorators';
 
 @Controller('department')
 @ApiTags('department')
@@ -23,6 +26,8 @@ export class DepartmentController {
   }
 
   @Get()
+  @UseGuards(PermissionGuard)
+  @Permissions('ViewDepartments')
   getAllDepartments() {
     return this.departmentService.getAllDepartments();
   }

@@ -62,14 +62,10 @@ export class UserService {
           role: {
             connect: { id: data.roleId },
           },
-          permissions: {
-            connect: data.permissions.map((id) => ({ id })),
-          },
         },
         include: {
           department: true,
           role: true,
-          permissions: true,
         },
       });
 

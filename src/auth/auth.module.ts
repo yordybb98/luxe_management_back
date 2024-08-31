@@ -7,7 +7,7 @@ import { jwtConstants } from './constants';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleModule } from 'src/role/role.module';
 import { DepartmentModule } from 'src/department/department.module';
-import { RolesGuard } from './guards/roles.guard';
+import { PermissionGuard } from 'src/common/guards/permission.guard';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { RolesGuard } from './guards/roles.guard';
   providers: [
     AuthService,
     { provide: 'APP_GUARD', useClass: AuthGuard },
-    { provide: 'APP_GUARD', useClass: RolesGuard },
+    { provide: 'APP_GUARD', useClass: PermissionGuard },
   ],
 })
 export class AuthModule {}

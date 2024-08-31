@@ -9,7 +9,7 @@ import {
 import { AuthService } from './auth.service';
 import { SignInDto, SignUpDto, ValidateTokenDto } from './dto/signInDto';
 import { ApiTags } from '@nestjs/swagger';
-import { Public } from './guards/public.guard';
+import { Public } from '../common/guards/public.guard';
 import { Response } from 'express';
 
 @ApiTags('auth')
