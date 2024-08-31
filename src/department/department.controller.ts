@@ -12,7 +12,6 @@ import { DepartmentService } from './department.service';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
 import { ApiTags } from '@nestjs/swagger';
-import { PermissionGuard } from 'src/common/guards/permission.guard';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 
 @Controller('department')
@@ -21,23 +20,25 @@ export class DepartmentController {
   constructor(private readonly departmentService: DepartmentService) {}
 
   @Post()
+  @Permissions('CreateDepartments')
   createDepartment(@Body() createDepartmentDto: CreateDepartmentDto) {
     return this.departmentService.createDepartment(createDepartmentDto);
   }
 
   @Get()
-  @UseGuards(PermissionGuard)
   @Permissions('ViewDepartments')
   getAllDepartments() {
     return this.departmentService.getAllDepartments();
   }
 
   @Get(':id')
+  @Permissions('ViewDepartments')
   getDepartmentById(@Param('id') id: string) {
     return this.departmentService.getDepartmentById(+id);
   }
 
   @Patch(':id')
+  @Permissions('UpdateDepartments')
   updateDepartment(
     @Param('id') id: string,
     @Body() updateDepartmentDto: UpdateDepartmentDto,
@@ -46,6 +47,7 @@ export class DepartmentController {
   }
 
   @Delete(':id')
+  @Permissions('DeleteDepartments')
   removeDepartment(@Param('id') id: string) {
     return this.departmentService.removeDepartment(+id);
   }

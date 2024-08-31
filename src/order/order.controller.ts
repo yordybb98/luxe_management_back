@@ -16,6 +16,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { CreateUserDto } from 'src/user/dto/createUserDto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { StatusService } from 'src/status/status.service';
+import { Permissions } from 'src/common/decorators/permissions.decorators';
 
 @ApiTags('order')
 @Controller('order')
@@ -27,6 +28,7 @@ export class OrderController {
   ) {}
 
   @Get()
+  @Permissions('ViewOrders')
   async getAllOrders(): Promise<Order[]> {
     return this.orderService.getAllOrders();
   }
