@@ -35,8 +35,6 @@ export class AuthService {
     //removing password from response
     const { password, id, ...result } = user;
 
-    console.log({ user });
-
     //contructing token data
     const payload = { sub: user.id, email: user.email, role: user.role.name };
 
