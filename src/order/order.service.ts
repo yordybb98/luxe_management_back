@@ -17,6 +17,34 @@ export class OrderService {
     });
   }
 
+  async getOrdersByUserId(id: number): Promise<Order[]> {
+    return this.prisma.order.findMany({
+      where: {
+        userId: id,
+      },
+      include: {
+        userAssigned: true,
+        status: true,
+        project: true,
+      },
+    });
+  }
+
+  async getOrdersByUserEmail(email: string): Promise<Order[]> {
+    return this.prisma.order.findMany({
+      where: {
+        userAssigned: {
+          email: email,
+        },
+      },
+      include: {
+        userAssigned: true,
+        status: true,
+        project: true,
+      },
+    });
+  }
+
   async getOrderById(id: number): Promise<Order> {
     return this.prisma.order.findUnique({
       where: {

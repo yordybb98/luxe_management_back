@@ -8,15 +8,16 @@ import {
   NotFoundException,
   BadRequestException,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { Order } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateUserDto } from 'src/user/dto/createUserDto';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { StatusService } from 'src/status/status.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
+import { GetOrderDto } from './dto/get-order.dto';
 
 @ApiTags('order')
 @Controller('order')
@@ -29,7 +30,13 @@ export class OrderController {
 
   @Get()
   @Permissions('ViewOrders')
-  async getAllOrders(): Promise<Order[]> {
+  async getAllOrders(@Query('email') email: string): Promise<Order[]> {
+    console.log({ email });
+    if (email) {
+      const user = await this.usersService.getUserByEmail(email);
+      if (!user) throw new NotFoundException('User not found');
+      return this.orderService.getOrdersByUserEmail(email);
+    }
     return this.orderService.getAllOrders();
   }
 
