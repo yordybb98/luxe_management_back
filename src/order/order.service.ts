@@ -26,6 +26,7 @@ export class OrderService {
         userAssigned: true,
         status: true,
         project: true,
+        client: true,
       },
     });
   }
@@ -54,6 +55,11 @@ export class OrderService {
         userAssigned: true,
         status: true,
         project: true,
+        client: {
+          include: {
+            projects: true,
+          },
+        },
       },
     });
   }
@@ -62,8 +68,6 @@ export class OrderService {
     return this.prisma.order.create({
       data: {
         name: data.name,
-        phone: data.phone,
-        address: data.address,
         description: data.description,
         userAssigned: {
           connect: {
@@ -82,11 +86,17 @@ export class OrderService {
             },
           },
         }),
+        client: {
+          connect: {
+            id: data.clientId,
+          },
+        },
       },
       include: {
         userAssigned: true,
         status: true,
         project: true,
+        client: true,
       },
     });
   }

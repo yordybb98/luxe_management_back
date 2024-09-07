@@ -10,16 +10,6 @@ export class CreateOrderDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   @MinLength(3)
-  phone: string;
-
-  @IsString()
-  @Transform(({ value }) => value.trim())
-  @MinLength(3)
-  address: string;
-
-  @IsString()
-  @Transform(({ value }) => value.trim())
-  @MinLength(3)
   description: string;
 
   @IsNumber()
@@ -31,4 +21,7 @@ export class CreateOrderDto {
   @IsNumber()
   @IsOptional()
   projectId: number;
+
+  @IsNumber()
+  clientId: number;
 }
