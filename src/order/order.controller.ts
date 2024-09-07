@@ -31,7 +31,6 @@ export class OrderController {
   @Get()
   @Permissions('ViewOrders')
   async getAllOrders(@Query('email') email: string): Promise<Order[]> {
-    console.log({ email });
     if (email) {
       const user = await this.usersService.getUserByEmail(email);
       if (!user) throw new NotFoundException('User not found');
