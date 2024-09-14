@@ -18,6 +18,8 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { StatusService } from 'src/status/status.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { GetOrderDto } from './dto/get-order.dto';
+import { normalizeOrder } from './odooImport/normalizations';
+import { authenticateFromOdoo, getOdooOrders } from './odooImport/api';
 
 @ApiTags('order')
 @Controller('order')
@@ -31,12 +33,18 @@ export class OrderController {
   @Get()
   @Permissions('ViewOrders')
   async getAllOrders(@Query('email') email: string): Promise<Order[]> {
-    if (email) {
-      const user = await this.usersService.getUserByEmail(email);
-      if (!user) throw new NotFoundException('User not found');
-      return this.orderService.getOrdersByUserEmail(email);
-    }
-    return this.orderService.getAllOrders();
+    // if (email) {
+    //   const user = await this.usersService.getUserByEmail(email);
+    //   if (!user) throw new NotFoundException('User not found');
+    //   return this.orderService.getOrdersByUserEmail(email);
+    // }
+    // return this.orderService.getAllOrders();
+
+    const UID = await authenticateFromOdoo();
+    const orders = await getOdooOrders(UID);
+    const normalizedOrders = normalizeOrder(orders);
+
+    return normalizedOrders;
   }
 
   @Get(':id')
