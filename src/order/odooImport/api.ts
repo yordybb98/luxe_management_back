@@ -239,28 +239,18 @@ const authenticateFromOdoo = async (): Promise<number> => {
   }
 }; */
 
-const getOdooOrders = async (uid: number): Promise<any[]> => {
+const getOdooOrdersWithIds = async (
+  uid: number,
+  ordersIDs: number[],
+): Promise<any[]> => {
   try {
-    const ids = await new Promise((resolve, reject) => {
-      modelsClient.methodCall(
-        'execute_kw',
-        [db, uid, password, 'crm.lead', 'search', [[]]],
-        (err: any, ids: any) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(ids);
-          }
-        },
-      );
-    });
+    console.log(ordersIDs);
 
-    console.log('IDs founded:', ids);
-
+    // Leer detalles de los registros
     const records = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
-        [db, uid, password, 'crm.lead', 'read', [ids], {}],
+        [db, uid, password, 'crm.lead', 'read', [ordersIDs], {}],
         (err: any, records: any[]) => {
           if (err) {
             reject(err);
@@ -271,67 +261,65 @@ const getOdooOrders = async (uid: number): Promise<any[]> => {
       );
     });
 
-    /* fs.writeFile('records.json', JSON.stringify(records, null, 2), (err) => {
-      if (err) {
-        console.error('Error al guardar el archivo:', err);
-      } else {
-        console.log('Archivo JSON guardado exitosamente.');
-      }
-    }); */
-
-    /* await new Promise((resolve, reject) => {
-      modelsClient.methodCall(
-        'execute_kw',
-        [db, uid, password, 'crm.lead', 'write', [[1796], { stage_id: 7 }]],
-        (err, value) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(value);
-          }
-        },
-      );
-    });
-
-    console.log('Orden actualizada'); */
-
-    // Leer detalles de los registros
-    /* const records = await new Promise((resolve, reject) => {
-      modelsClient.methodCall(
-        'execute_kw',
-        [
-          db,
-          uid,
-          password,
-          'crm.lead',
-          'read',
-          [ids],
-          {
-            fields: [
-              'name',
-              'company_id',
-              'partner_id',
-              'create_date',
-              'partner_invoice_id',
-              'partner_shipping_id',
-              'tax_totals',
-              'opportunity_id',
-              'avatax_unique_code',
-              'health',
-            ],
-          },
-        ],
-        (err: any, records: any[]) => {
-          if (err) {
-            reject(err);
-          } else {
-            resolve(records);
-          }
-        },
-      );
-    }); */
-
+    console.log('Orders founded:', records);
     return records as any[];
+  } catch (err) {
+    console.error('Error getting Odoo orders:', err);
+    return [];
+  }
+};
+
+const getAllOddoOrders = async (uid: number): Promise<any[]> => {
+  try {
+    const allRecords = await new Promise((resolve, reject) => {
+      // Step 1: Get all IDs
+      modelsClient.methodCall(
+        'execute_kw',
+        [db, uid, password, 'crm.lead', 'search', [[]]], // Get all IDs
+        (err: any, ids: any[]) => {
+          if (err) {
+            reject(err);
+          } else {
+            // Step 2: Use `read` to get details of all records
+            modelsClient.methodCall(
+              'execute_kw',
+              [db, uid, password, 'crm.lead', 'read', [ids]], // Read all records
+              (err: any, records: any[]) => {
+                if (err) {
+                  reject(err);
+                } else {
+                  resolve(records); // `records` contains details of all records
+                }
+              },
+            );
+          }
+        },
+      );
+    });
+
+    return allRecords as any[];
+  } catch (err) {
+    console.error('Error getting Odoo orders:', err);
+    return [];
+  }
+};
+
+const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
+  try {
+    const record = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [db, uid, password, 'crm.lead', 'read', [id], {}],
+        (err: any, record: any[]) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(record);
+          }
+        },
+      );
+    });
+    return record as any;
   } catch (err) {
     console.error('Error getting Odoo orders:', err);
     return [];
@@ -342,5 +330,7 @@ export {
   authenticateFromOdoo,
   getOdooVersion,
   // getOdooEmployees,
-  getOdooOrders,
+  getOdooOrdersWithIds,
+  getAllOddoOrders,
+  getOdooOrderById,
 };

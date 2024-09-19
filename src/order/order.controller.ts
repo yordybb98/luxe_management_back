@@ -9,6 +9,9 @@ import {
   BadRequestException,
   Patch,
   Query,
+  HttpCode,
+  HttpStatus,
+  Request,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
@@ -18,9 +21,16 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { GetOrderDto } from './dto/get-order.dto';
 import { normalizeOrder } from './odooImport/normalizations';
-import { authenticateFromOdoo, getOdooOrders } from './odooImport/api';
+import {
+  authenticateFromOdoo,
+  getAllOddoOrders,
+  getOdooOrderById,
+  getOdooOrdersWithIds,
+} from './odooImport/api';
 import { Order } from 'src/common/types/order';
 import { AssignOrderDto } from './dto/assign-order.dto';
+import { JwtService } from '@nestjs/jwt';
+import { jwtConstants } from 'src/auth/constants';
 
 @ApiTags('order')
 @Controller('order')
@@ -28,11 +38,15 @@ export class OrderController {
   constructor(
     private readonly orderService: OrderService,
     private readonly usersService: UserService,
+    private readonly jwtService: JwtService,
   ) {}
 
   @Get()
   @Permissions('ViewOrders')
-  async getAllOrders(@Query('email') email: string): Promise<Order[]> {
+  async getAllOrders(
+    @Request() req,
+    @Query('email') email: string,
+  ): Promise<Order[]> {
     // if (email) {
     //   const user = await this.usersService.getUserByEmail(email);
     //   if (!user) throw new NotFoundException('User not found');
@@ -40,8 +54,22 @@ export class OrderController {
     // }
     // return this.orderService.getAllOrders();
 
+    const token = req.headers.authorization?.split(' ')[1];
+    //deserializando token
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: jwtConstants.secret,
+    });
+
+    let orders = [];
     const UID = await authenticateFromOdoo();
-    const orders = await getOdooOrders(UID);
+
+    if (payload.role.name !== 'ADMIN') {
+      const userOrders = payload.orders;
+      orders = await getOdooOrdersWithIds(UID, userOrders);
+    } else {
+      orders = await getAllOddoOrders(UID);
+    }
+
     const normalizedOrders = normalizeOrder(orders);
 
     return normalizedOrders;
@@ -49,7 +77,8 @@ export class OrderController {
 
   @Get(':id')
   async getOrderById(@Param('id') id: string): Promise<Order> {
-    const orderFound = await this.orderService.getOrderById(Number(id));
+    const UID = await authenticateFromOdoo();
+    const orderFound = await getOdooOrderById(UID, +id);
     if (!orderFound) throw new NotFoundException('Order not found');
     return orderFound;
   }
@@ -64,13 +93,24 @@ export class OrderController {
   }
 
   @Post('assignOrder')
-  async assignOrder(@Body() data: AssignOrderDto): Promise<void> {
-    //checking if user exists
-    const user = await this.usersService.getUserById(data.userId);
-    if (!user) throw new BadRequestException('User not found');
+  async assignOrder(
+    @Request() req,
+    @Body() data: AssignOrderDto,
+  ): Promise<void> {
+    try {
+      //checking if user exists
 
-    //assigning order
-    await this.usersService.assignOrder(data.userId, data.orderId);
+      const user = await this.usersService.getUserById(data.userId);
+      if (!user) throw new BadRequestException('User not found');
+
+      console.log({ data });
+
+      //assigning order
+      await this.usersService.assignOrder(data.userId, data.orderId);
+    } catch (err) {
+      console.log({ err });
+      throw new NotFoundException("Order doesn't exist");
+    }
   }
 
   @Patch(':id')

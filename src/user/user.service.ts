@@ -92,14 +92,24 @@ export class UserService {
   }
 
   async assignOrder(userId: number, orderId: number): Promise<User> {
+    const { orders } = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { orders: true },
+    });
+
+    if (!orders) {
+      throw new Error('User not found');
+    }
+
+    // Verifica si el orderId ya está en la lista
+    const updatedOrders = [...new Set([...orders, orderId])];
+
     return this.prisma.user.update({
       where: {
         id: userId,
       },
       data: {
-        orders: {
-          push: orderId,
-        },
+        orders: updatedOrders,
       },
     });
   }
