@@ -5,35 +5,35 @@
 //////////ENUMS///////////
 //////////////////////////
 enum Permission {
-  ViewClients
-  CreateClients
-  UpdateClients
-  DeleteClients
+  // ViewClients
+  // CreateClients
+  // UpdateClients
+  // DeleteClients
 
-  ViewDepartments
-  CreateDepartments
-  UpdateDepartments
-  DeleteDepartments
+  // ViewDepartments
+  // CreateDepartments
+  // UpdateDepartments
+  // DeleteDepartments
 
   ViewOrders
   CreateOrders
   UpdateOrders
   DeleteOrders
 
-  ViewProjects
-  CreateProjects
-  UpdateProjects
-  DeleteProjects
+  // ViewProjects
+  // CreateProjects
+  // UpdateProjects
+  // DeleteProjects
 
   ViewRoles
   CreateRoles
   UpdateRoles
   DeleteRoles
 
-  ViewStatus
-  CreateStatus
-  UpdateStatus
-  DeleteStatus
+  // ViewStatus
+  // CreateStatus
+  // UpdateStatus
+  // DeleteStatus
 
   ViewUsers
   CreateUsers
@@ -59,7 +59,7 @@ model User {
   username String @unique
   email    String @unique
   password String
-  // orders       Order[]
+  orders   Int[]
   // department   Department? @relation(fields: [departmentId], references: [id])
   // departmentId Int?
   role     Role   @relation(fields: [roleId], references: [id])

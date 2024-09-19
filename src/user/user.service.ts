@@ -90,4 +90,17 @@ export class UserService {
       },
     });
   }
+
+  async assignOrder(userId: number, orderId: number): Promise<User> {
+    return this.prisma.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        orders: {
+          push: orderId,
+        },
+      },
+    });
+  }
 }

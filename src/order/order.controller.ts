@@ -20,6 +20,7 @@ import { GetOrderDto } from './dto/get-order.dto';
 import { normalizeOrder } from './odooImport/normalizations';
 import { authenticateFromOdoo, getOdooOrders } from './odooImport/api';
 import { Order } from 'src/common/types/order';
+import { AssignOrderDto } from './dto/assign-order.dto';
 
 @ApiTags('order')
 @Controller('order')
@@ -60,6 +61,16 @@ export class OrderController {
     if (!user) throw new BadRequestException('User not found');
 
     return this.orderService.createOrder(data);
+  }
+
+  @Post('assignOrder')
+  async assignOrder(@Body() data: AssignOrderDto): Promise<void> {
+    //checking if user exists
+    const user = await this.usersService.getUserById(data.userId);
+    if (!user) throw new BadRequestException('User not found');
+
+    //assigning order
+    await this.usersService.assignOrder(data.userId, data.orderId);
   }
 
   @Patch(':id')

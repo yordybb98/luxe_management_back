@@ -16,9 +16,11 @@ function normalizeOrder(data: any[]): Order[] {
     clientId: (item.client_id ?? 0) as number,
   })); */
 
+  console.log({ data });
+
   return data.map((item) => ({
     id: item.id as number,
-    name: item.Z as string,
+    name: item.name as string,
     description: item.email as string,
     status: {
       id: (item.status_id ?? 0) as number,
