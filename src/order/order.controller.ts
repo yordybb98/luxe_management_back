@@ -11,15 +11,15 @@ import {
   Query,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
-import { Order } from '@prisma/client';
+// import { Order } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateOrderDto } from './dto/create-order.dto';
-import { StatusService } from 'src/status/status.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { GetOrderDto } from './dto/get-order.dto';
 import { normalizeOrder } from './odooImport/normalizations';
 import { authenticateFromOdoo, getOdooOrders } from './odooImport/api';
+import { Order } from 'src/common/types/order';
 
 @ApiTags('order')
 @Controller('order')
@@ -27,7 +27,6 @@ export class OrderController {
   constructor(
     private readonly orderService: OrderService,
     private readonly usersService: UserService,
-    private readonly statusService: StatusService,
   ) {}
 
   @Get()
@@ -59,10 +58,6 @@ export class OrderController {
     //checking if user exists
     const user = await this.usersService.getUserById(data.userId);
     if (!user) throw new BadRequestException('User not found');
-
-    //checking if status exists
-    const status = await this.statusService.getStatusById(data.statusId);
-    if (!status) throw new BadRequestException('Status not found');
 
     return this.orderService.createOrder(data);
   }

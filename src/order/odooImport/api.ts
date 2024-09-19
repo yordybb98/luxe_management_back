@@ -1,5 +1,3 @@
-import { Client, Order } from '@prisma/client';
-
 const xmlrpc = require('xmlrpc');
 const fs = require('fs');
 
@@ -190,7 +188,7 @@ const authenticateFromOdoo = async (): Promise<number> => {
 // );
 
 // Buscar todos los registros en 'res.partner' sin filtros
-const getOdooEmployees = async (uid: number): Promise<Client[]> => {
+/* const getOdooEmployees = async (uid: number): Promise<Client[]> => {
   try {
     // Buscar todos los registros en 'hr.employee'
     const ids = await new Promise((resolve, reject) => {
@@ -239,14 +237,14 @@ const getOdooEmployees = async (uid: number): Promise<Client[]> => {
     console.error('Error getting Odoo employees:', err);
     return [];
   }
-};
+}; */
 
 const getOdooOrders = async (uid: number): Promise<any[]> => {
   try {
     const ids = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
-        [db, uid, password, 'sale.order', 'search', [[]]],
+        [db, uid, password, 'crm.lead', 'search', [[]]],
         (err: any, ids: any) => {
           if (err) {
             reject(err);
@@ -259,15 +257,53 @@ const getOdooOrders = async (uid: number): Promise<any[]> => {
 
     console.log('IDs founded:', ids);
 
-    // Leer detalles de los registros
     const records = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [db, uid, password, 'crm.lead', 'read', [ids], {}],
+        (err: any, records: any[]) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(records);
+          }
+        },
+      );
+    });
+
+    /* fs.writeFile('records.json', JSON.stringify(records, null, 2), (err) => {
+      if (err) {
+        console.error('Error al guardar el archivo:', err);
+      } else {
+        console.log('Archivo JSON guardado exitosamente.');
+      }
+    }); */
+
+    /* await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [db, uid, password, 'crm.lead', 'write', [[1796], { stage_id: 7 }]],
+        (err, value) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(value);
+          }
+        },
+      );
+    });
+
+    console.log('Orden actualizada'); */
+
+    // Leer detalles de los registros
+    /* const records = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
         [
           db,
           uid,
           password,
-          'sale.order',
+          'crm.lead',
           'read',
           [ids],
           {
@@ -293,7 +329,7 @@ const getOdooOrders = async (uid: number): Promise<any[]> => {
           }
         },
       );
-    });
+    }); */
 
     return records as any[];
   } catch (err) {
@@ -305,6 +341,6 @@ const getOdooOrders = async (uid: number): Promise<any[]> => {
 export {
   authenticateFromOdoo,
   getOdooVersion,
-  getOdooEmployees,
+  // getOdooEmployees,
   getOdooOrders,
 };

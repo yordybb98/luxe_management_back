@@ -8,14 +8,12 @@ import { SignInResponseDto, SignUpResponseDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RoleService } from 'src/role/role.service';
-import { DepartmentService } from 'src/department/department.service';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly usersService: UserService,
     private readonly roleService: RoleService,
-    private readonly departmentService: DepartmentService,
     private readonly jwtService: JwtService,
   ) {}
 
@@ -55,11 +53,11 @@ export class AuthService {
       throw new BadRequestException('Role not found');
     }
 
-    const department =
+    /* const department =
       await this.departmentService.getDepartmentById(departmentId);
     if (!department) {
       throw new BadRequestException('Department not found');
-    }
+    } */
 
     await this.usersService.createUser({
       username,

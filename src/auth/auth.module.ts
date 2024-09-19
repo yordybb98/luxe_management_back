@@ -6,13 +6,11 @@ import { JwtModule } from '@nestjs/jwt';
 import { jwtConstants } from './constants';
 import { AuthGuard } from './guards/auth.guard';
 import { RoleModule } from 'src/role/role.module';
-import { DepartmentModule } from 'src/department/department.module';
 import { PermissionGuard } from 'src/common/guards/permission.guard';
 
 @Module({
   imports: [
     RoleModule,
-    DepartmentModule,
     UserModule,
     JwtModule.register({
       global: true,

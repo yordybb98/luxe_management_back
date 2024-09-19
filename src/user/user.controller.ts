@@ -18,7 +18,6 @@ import { PublicUserData } from './dto/publicUserData';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
-import { DepartmentService } from 'src/department/department.service';
 
 @ApiTags('user')
 @Controller('users')
@@ -26,7 +25,6 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly roleService: RoleService,
-    private readonly departmentService: DepartmentService,
   ) {}
 
   @Get()
@@ -62,15 +60,15 @@ export class UserController {
     }
 
     //checking if Department was provided
-    if (data.departmentId) {
-      //cheking if departmentExists
-      const departmentExists = await this.departmentService.getDepartmentById(
-        data.departmentId,
-      );
-      if (!departmentExists) {
-        throw new BadRequestException('Department not found');
-      }
-    }
+    // if (data.departmentId) {
+    //   //cheking if departmentExists
+    //   const departmentExists = await this.departmentService.getDepartmentById(
+    //     data.departmentId,
+    //   );
+    //   if (!departmentExists) {
+    //     throw new BadRequestException('Department not found');
+    //   }
+    // }
 
     //hashing password
     data.password = await bcrypt.hash(data.password, 10);

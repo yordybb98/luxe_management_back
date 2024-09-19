@@ -1,4 +1,5 @@
-import { Department, Order, Permission, Project, Role } from '@prisma/client';
+import { Permission, Role } from '@prisma/client';
+import { Order } from 'src/common/types/order';
 
 export class User {
   id: number;
@@ -8,7 +9,5 @@ export class User {
   password: string;
   role: Role;
   orders: Order[];
-  department: Department;
-  projects: Project[];
   permissions: Permission[];
 }

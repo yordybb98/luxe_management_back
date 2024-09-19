@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/createUserDto';
@@ -10,7 +10,6 @@ export class UserService {
   async getAllUsers(): Promise<User[]> {
     return this.prisma.user.findMany({
       include: {
-        department: true,
         role: true,
       },
     });
@@ -22,7 +21,6 @@ export class UserService {
         id,
       },
       include: {
-        department: true,
         role: true,
       },
     });
@@ -34,7 +32,6 @@ export class UserService {
         username,
       },
       include: {
-        department: true,
         role: true,
       },
     });
@@ -66,7 +63,6 @@ export class UserService {
           },
         },
         include: {
-          department: true,
           role: true,
         },
       });
