@@ -244,8 +244,6 @@ const getOdooOrdersWithIds = async (
   ordersIDs: number[],
 ): Promise<any[]> => {
   try {
-    console.log(ordersIDs);
-
     // Leer detalles de los registros
     const records = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
@@ -260,8 +258,6 @@ const getOdooOrdersWithIds = async (
         },
       );
     });
-
-    console.log('Orders founded:', records);
     return records as any[];
   } catch (err) {
     console.error('Error getting Odoo orders:', err);
@@ -326,6 +322,73 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
   }
 };
 
+const updateOdooOrder = async (
+  uid: number,
+  orderId: number,
+  propertyKey: string,
+  propertyValue: any,
+): Promise<any> => {
+  try {
+    const records = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db,
+          uid,
+          password,
+          'crm.lead',
+          'write',
+          [[orderId], { [propertyKey]: propertyValue }],
+          {},
+        ],
+        (err: any, records: any[]) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(records);
+          }
+        },
+      );
+    });
+
+    return records as any;
+  } catch (err) {
+    console.error('Error updating Odoo order:', err);
+    return [];
+  }
+};
+
+const searchOdooOrder = async (uid, searchKey, searchValue): Promise<any[]> => {
+  try {
+    const orders = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db, // Database name
+          uid, // User ID
+          password, // Password
+          'crm.lead', // Model (crm.lead)
+          'search_read', // Method (search_read)
+          [[[searchKey, '=', searchValue]]], // Dynamic domain filter
+          {},
+        ],
+        (err, orders) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(orders);
+          }
+        },
+      );
+    });
+
+    return orders as any[];
+  } catch (err) {
+    console.error('Error fetching orders:', err);
+    return [];
+  }
+};
+
 export {
   authenticateFromOdoo,
   getOdooVersion,
@@ -333,4 +396,6 @@ export {
   getOdooOrdersWithIds,
   getAllOddoOrders,
   getOdooOrderById,
+  updateOdooOrder,
+  searchOdooOrder,
 };

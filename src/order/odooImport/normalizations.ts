@@ -1,36 +1,39 @@
 import { Order } from 'src/common/types/order';
 
-function normalizeOrder(data: any[]): Order[] {
-  // Mapeo de campos del objeto de entrada a los campos del tipo Order
-  /* return data.map((item) => ({
-    id: item.id as number,
-    name: item.partner_id[1] as string,
-    description: (item.opportunity_id[1] || '') as string,
-    status: {
-      id: (item.status_id ?? 0) as number,
-      name: (item.status_name ?? '') as string,
-    },
-    statusId: (item.status_id ?? 0) as number,
-    userId: (item.user_id ?? 0) as number,
-    projectId: (item.project_id ?? 0) as number,
-    clientId: (item.client_id ?? 0) as number,
-  })); */
+function normalizeOrder(item: any): Order {
+  // Mapping input odoo object to Order type
+  const id = item.id;
+  const name = item.name as string;
+  const description = item.x_studio_order_description || '';
+  const userAssignedId = item.x_studio_userasigned as number;
+  const status = {
+    id: item.stage_id?.[0],
+    name: item.stage_id?.[1],
+  };
+  const companyName = item.partner_name || '';
+  const email = item.email_from || '';
+  const phone = item.phone || '';
+  const mobile = item.mobile || '';
+  const address = item.street || '';
+  const website = item.website || '';
+  const comments = item.x_studio_comment || '';
+  const designerId = item.x_studio_designer_id || 0;
 
-  console.log({ data });
-
-  return data.map((item) => ({
-    id: item.id as number,
-    name: item.name as string,
-    description: item.email as string,
-    status: {
-      id: (item.status_id ?? 0) as number,
-      name: (item.status_name ?? '') as string,
-    },
-    statusId: (item.status_id ?? 0) as number,
-    userId: (item.user_id ?? 0) as number,
-    projectId: (item.project_id ?? 0) as number,
-    clientId: (item.client_id ?? 0) as number,
-  }));
+  return {
+    id,
+    name,
+    description,
+    userAssignedId,
+    status,
+    companyName,
+    email,
+    phone,
+    mobile,
+    address,
+    website,
+    comments,
+    designerId,
+  };
 }
 
 export { normalizeOrder };
