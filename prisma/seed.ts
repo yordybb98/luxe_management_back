@@ -18,8 +18,42 @@ async function main() {
         description: 'Default admin role',
       },
     });
-
+    console.log('--------------------');
     console.log('Default admin role created');
+  }
+
+  let designerRoleExists = await prisma.role.findFirst({
+    where: { name: 'Designer' },
+  });
+
+  if (!designerRoleExists) {
+    designerRoleExists = await prisma.role.create({
+      data: {
+        name: 'Designer',
+        permissions: [],
+        description: 'Default Designer role',
+      },
+    });
+
+    console.log('--------------------');
+    console.log('Default Designer role created');
+  }
+
+  let technicianRoleExists = await prisma.role.findFirst({
+    where: { name: 'Technician' },
+  });
+
+  if (!technicianRoleExists) {
+    technicianRoleExists = await prisma.role.create({
+      data: {
+        name: 'Technician',
+        permissions: [],
+        description: 'Default Technician role',
+      },
+    });
+
+    console.log('--------------------');
+    console.log('Default Technician role created');
   }
 
   let adminExists = await prisma.user.findFirst({
@@ -39,11 +73,12 @@ async function main() {
         roleId: adminRoleExists.id,
       },
     });
+    console.log('--------------------');
     console.log('Default admin user created');
   } else {
+    console.log('--------------------');
     console.log('Admin user already exists');
   }
-
   console.log('Admin User:', adminExists);
 }
 
