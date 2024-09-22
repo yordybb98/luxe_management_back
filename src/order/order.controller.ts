@@ -64,15 +64,15 @@ export class OrderController {
 
     let orders = [];
     const UID = await authenticateFromOdoo();
-
-    if (payload.role.name !== 'ADMIN') {
-      if (payload.role.name === 'DESIGNER') {
+    const userRoleName = (payload.role.name as string).toLocaleLowerCase();
+    if (userRoleName !== 'admin') {
+      if (userRoleName === 'designer') {
         orders = await searchOdooOrder(
           UID,
           'x_studio_designer_id',
           payload.sub,
         );
-      } else if (payload.role.name === 'TECHNICIAN') {
+      } else if (userRoleName === 'technician') {
         orders = await searchOdooOrder(
           UID,
           'x_studio_userasigned',
@@ -81,7 +81,7 @@ export class OrderController {
       }
       console.log({ orders });
     } else {
-      const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111];
+      const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
       orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder);
     }
 
