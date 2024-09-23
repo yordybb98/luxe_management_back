@@ -21,6 +21,7 @@ enum Permission {
   DeleteOrders
   AsignOrders
   FinishOrders
+  FinishTasks
 
   // ViewProjects
   // CreateProjects
