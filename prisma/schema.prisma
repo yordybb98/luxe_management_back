@@ -20,6 +20,7 @@ enum Permission {
   UpdateOrders
   DeleteOrders
   AsignOrders
+  FinishOrders
 
   // ViewProjects
   // CreateProjects

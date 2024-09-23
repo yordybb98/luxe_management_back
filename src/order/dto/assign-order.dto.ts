@@ -1,15 +1,14 @@
 import { IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class AssignUserDto {
+  @IsString()
+  instructions: string;
+
   @IsNumber()
-  userId: number;
+  technicianId: number;
 
   @IsNumber()
   orderId: number;
-
-  @IsOptional()
-  @IsString()
-  comment?: string;
 }
 
 export class AssignDesignerDto {
@@ -20,6 +19,5 @@ export class AssignDesignerDto {
   orderId: number;
 
   @IsOptional()
-  @IsString()
   comment?: string;
 }

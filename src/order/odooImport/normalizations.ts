@@ -18,6 +18,7 @@ function normalizeOrder(item: any): Order {
   const website = item.website || '';
   const comments = item.x_studio_comment || '';
   const designerId = item.x_studio_designer_id || 0;
+  const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : '';
 
   return {
     id,
@@ -33,6 +34,7 @@ function normalizeOrder(item: any): Order {
     website,
     comments,
     designerId,
+    tasks,
   };
 }
 

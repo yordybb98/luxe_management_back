@@ -33,6 +33,8 @@ import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/auth/constants';
 import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
+import { Task } from 'src/common/types/tasks';
+import { randomUUID } from 'crypto';
 
 @ApiTags('order')
 @Controller('order')
@@ -114,6 +116,57 @@ export class OrderController {
     return { order: orderFound, normalizedOrder: orderWithUser };
   }
 
+  @Post(':id/finish')
+  async finishOrder(@Param('id') id: string) /* : Promise<Order> */ {
+    const UID = await authenticateFromOdoo();
+    const orderFound = await getOdooOrderById(UID, +id);
+
+    if (!orderFound) throw new NotFoundException('Order not found');
+
+    //Removing user assignment from order
+    await updateOdooOrder(UID, +id, 'x_studio_userasigned', '');
+
+    //Removing designer assignment from order
+    await updateOdooOrder(UID, +id, 'x_studio_designer_id', '');
+
+    //Changing order status
+    await updateOdooOrder(UID, +id, 'stage_id', 5);
+  }
+
+  @Post(':orderId/finishTask/:taskId')
+  async finishTask(
+    @Param('orderId') id: string,
+    @Param('taskId') taskId: string,
+  ) /* : Promise<Order> */ {
+    const UID = await authenticateFromOdoo();
+
+    //Founding order
+    const orderFound = await getOdooOrderById(UID, +id);
+    if (!orderFound) throw new NotFoundException('Order not found');
+
+    //Founding task
+    const normalizedOrder = normalizeOrder(orderFound[0]);
+    const taskFound =
+      normalizedOrder.tasks.id.toLowerCase() === taskId.toLowerCase();
+    if (!taskFound) throw new NotFoundException('Task not found');
+    const task = normalizedOrder.tasks;
+
+    //Removing user assignment from order
+    await updateOdooOrder(UID, +id, 'x_studio_userasigned', '');
+
+    //Defining task finished date
+    task.dateFinished = new Date();
+
+    //Completing task
+    task.status = 'COMPLETED';
+
+    //Stringify task
+    const updatedTask = JSON.stringify(task);
+
+    //Updating task
+    await updateOdooOrder(UID, +id, 'x_studio_tasks', updatedTask);
+  }
+
   @Post()
   async createOrder(@Body() data: CreateOrderDto) /* : Promise<Order> */ {
     /* //checking if user exists
@@ -130,11 +183,16 @@ export class OrderController {
   ): Promise<void> {
     try {
       //checking if user exists
-
       const user = await this.usersService.getUserById(data.designerId);
       if (!user) throw new BadRequestException('Designer not found');
 
+      //Authenticating Odoo
       const uid = await authenticateFromOdoo();
+
+      //Changing order status to Production
+      await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
+
+      //Assigning designer
       await updateOdooOrder(
         uid,
         data.orderId,
@@ -142,6 +200,7 @@ export class OrderController {
         data.designerId,
       );
 
+      //Adding comment
       await updateOdooOrder(
         uid,
         data.orderId,
@@ -163,25 +222,30 @@ export class OrderController {
     try {
       //checking if user exists
 
-      const user = await this.usersService.getUserById(data.userId);
-      if (!user) throw new BadRequestException('Designer not found');
+      const user = await this.usersService.getUserById(data.technicianId);
+      if (!user) throw new BadRequestException('Technician not found');
 
       const uid = await authenticateFromOdoo();
       await updateOdooOrder(
         uid,
         data.orderId,
         'x_studio_userasigned',
-        data.userId,
+        data.technicianId,
       );
 
-      await updateOdooOrder(
-        uid,
-        data.orderId,
-        'x_studio_comment',
-        data.comment,
-      );
+      const newTask = JSON.stringify({
+        id: randomUUID(),
+        technicianId: data.technicianId,
+        dateAssigned: new Date(),
+        instructions: data.instructions,
+        status: 'IN-PROGRESS',
+      });
 
-      console.log(`Order ${data.orderId} assigned to user ${data.userId}`);
+      await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', newTask);
+
+      console.log(
+        `Order ${data.orderId} assigned to user ${user.name} with id ${data.technicianId}`,
+      );
     } catch (err) {
       console.log({ err });
       throw new NotFoundException("Order doesn't exist");

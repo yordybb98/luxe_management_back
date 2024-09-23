@@ -1,5 +1,6 @@
 import { User } from '@prisma/client';
 import { Status } from './stage';
+import { Task } from './tasks';
 
 export type Order = {
   id: number;
@@ -16,4 +17,5 @@ export type Order = {
   website: string;
   comments: string;
   designerId: number;
+  tasks?: Task;
 };
