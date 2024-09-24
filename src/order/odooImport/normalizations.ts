@@ -18,7 +18,7 @@ function normalizeOrder(item: any): Order {
   const website = item.website || '';
   const comments = item.x_studio_comment || '';
   const designerId = item.x_studio_designer_id || 0;
-  const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : '';
+  const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : [];
   const directory = item.x_studio_directory || '';
 
   return {

@@ -36,6 +36,7 @@ import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
 import { createFolders } from 'src/utils/utils';
 import { settings } from 'settings.config';
+import { Task } from 'src/common/types/tasks';
 const path = require('path');
 
 @ApiTags('order')
@@ -148,22 +149,20 @@ export class OrderController {
 
     //Founding task
     const normalizedOrder = normalizeOrder(orderFound[0]);
-    const taskFound =
-      normalizedOrder.tasks.id.toLowerCase() === taskId.toLowerCase();
+    const taskFound = normalizedOrder.tasks.find((task) => task.id === taskId);
     if (!taskFound) throw new NotFoundException('Task not found');
-    const task = normalizedOrder.tasks;
 
     //Removing user assignment from order
     await updateOdooOrder(UID, +id, 'x_studio_userasigned', '');
 
     //Defining task finished date
-    task.dateFinished = new Date();
+    taskFound.dateFinished = new Date();
 
     //Completing task
-    task.status = 'COMPLETED';
+    taskFound.status = 'COMPLETED';
 
     //Stringify task
-    const updatedTask = JSON.stringify(task);
+    const updatedTask = JSON.stringify(taskFound);
 
     //Updating task
     await updateOdooOrder(UID, +id, 'x_studio_tasks', updatedTask);
@@ -227,7 +226,13 @@ export class OrderController {
       const user = await this.usersService.getUserById(data.technicianId);
       if (!user) throw new BadRequestException('Technician not found');
 
+      //Authenticating Odoo
       const uid = await authenticateFromOdoo();
+
+      //Changing order status to Production//Changing order status to Production
+      await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
+
+      //Assigning designer
       await updateOdooOrder(
         uid,
         data.orderId,
@@ -235,15 +240,27 @@ export class OrderController {
         data.technicianId,
       );
 
-      const newTask = JSON.stringify({
+      //Getting previous tasks
+      const tasks = (await this.getOrderById(data.orderId.toString()))
+        .normalizedOrder.tasks;
+
+      //Creating new task
+      const newTask: Task = {
         id: randomUUID(),
         technicianId: data.technicianId,
         dateAssigned: new Date(),
         instructions: data.instructions,
         status: 'IN-PROGRESS',
-      });
+      };
 
-      await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', newTask);
+      //Adding new task to previous tasks
+      tasks.push(newTask);
+
+      //Stringify tasks
+      const parsedTasks = JSON.stringify(tasks);
+
+      //Updating odoo tasks
+      await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', parsedTasks);
 
       console.log(
         `Order ${data.orderId} assigned to user ${user.name} with id ${data.technicianId}`,
