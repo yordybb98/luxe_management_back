@@ -18,4 +18,5 @@ export type Order = {
   comments: string;
   designerId: number;
   tasks?: Task;
+  directory: string;
 };

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "Permission" AS ENUM ('ViewClients', 'CreateClients', 'UpdateClients', 'DeleteClients', 'ViewDepartments', 'CreateDepartments', 'UpdateDepartments', 'DeleteDepartments', 'ViewOrders', 'CreateOrders', 'UpdateOrders', 'DeleteOrders', 'ViewProjects', 'CreateProjects', 'UpdateProjects', 'DeleteProjects', 'ViewRoles', 'CreateRoles', 'UpdateRoles', 'DeleteRoles', 'ViewStatus', 'CreateStatus', 'UpdateStatus', 'DeleteStatus', 'ViewUsers', 'CreateUsers', 'UpdateUsers', 'DeleteUsers');
+CREATE TYPE "Permission" AS ENUM ('ViewOrders', 'CreateOrders', 'UpdateOrders', 'DeleteOrders', 'AsignOrders', 'FinishOrders', 'FinishTasks', 'ViewRoles', 'CreateRoles', 'UpdateRoles', 'DeleteRoles', 'ViewUsers', 'CreateUsers', 'UpdateUsers', 'DeleteUsers');
 
 -- CreateTable
 CREATE TABLE "User" (
@@ -8,6 +8,7 @@ CREATE TABLE "User" (
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "password" TEXT NOT NULL,
+    "orders" INTEGER[],
     "roleId" INTEGER NOT NULL,
 
     CONSTRAINT "User_pkey" PRIMARY KEY ("id")

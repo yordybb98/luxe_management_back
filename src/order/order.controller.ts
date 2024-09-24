@@ -33,8 +33,10 @@ import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/auth/constants';
 import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
-import { Task } from 'src/common/types/tasks';
 import { randomUUID } from 'crypto';
+import { createFolders } from 'src/utils/utils';
+import { settings } from 'settings.config';
+const path = require('path');
 
 @ApiTags('order')
 @Controller('order')
@@ -271,5 +273,39 @@ export class OrderController {
     } catch (err) {
       throw new NotFoundException("Order doesn't exist");
     } */
+  }
+
+  @Post(':orderId/createDirectory')
+  async createDirectory(@Request() req, @Param('orderId') orderId: string) {
+    function sanitizeFolderName(name: string): string {
+      name = name.replace(/"/g, '');
+
+      // Define un regex para caracteres no válidos en nombres de carpeta
+      const invalidChars = /[<>:"/\\|?*\x00-\x1F]/g;
+
+      // Reemplaza los caracteres inválidos por un guion bajo
+      return name.replace(invalidChars, '_').trim();
+    }
+    const order = await this.getOrderById(orderId);
+    const BASE_DIR = settings.BASE_ROOT_DIRECTORY;
+    const currentYear = new Date().getFullYear().toString();
+    const orderName = order.normalizedOrder.name;
+    const companyName = order.normalizedOrder.companyName || orderName;
+    const ORDER_PATH = path.join(
+      BASE_DIR,
+      companyName,
+      currentYear,
+      sanitizeFolderName(orderName),
+    );
+
+    try {
+      for (const folder of settings.FOLDERS_STRUCTURE) {
+        await createFolders(path.join(ORDER_PATH, folder));
+      }
+      const uid = await authenticateFromOdoo();
+      await updateOdooOrder(uid, +orderId, 'x_studio_directory', ORDER_PATH);
+    } catch (err) {
+      console.log({ err });
+    }
   }
 }
