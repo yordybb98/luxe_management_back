@@ -1,4 +1,4 @@
-export type Status = {
+export type Stage = {
   id: number;
   name: string;
 };

@@ -322,6 +322,36 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
   }
 };
 
+const getOdooStages = async (uid) => {
+  try {
+    const stages = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db,
+          uid,
+          password,
+          'crm.stage',
+          'search_read',
+          [],
+          { fields: ['name'] },
+        ],
+        (err, stages) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(stages);
+          }
+        },
+      );
+    });
+    return stages;
+  } catch (err) {
+    console.error('Error getting Odoo stages:', err);
+    return [];
+  }
+};
+
 const updateOdooOrder = async (
   uid: number,
   orderId: number,
@@ -397,6 +427,7 @@ const searchOdooOrder = async (
 export {
   authenticateFromOdoo,
   getOdooVersion,
+  getOdooStages,
   // getOdooEmployees,
   getOdooOrdersWithIds,
   getAllOddoOrders,

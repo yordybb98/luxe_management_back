@@ -8,7 +8,7 @@ function normalizeOrder(item: any): Order {
   const techniciansAssignedId = item.x_studio_technicians_assigned
     ? JSON.parse(item.x_studio_technicians_assigned)
     : [];
-  const status = {
+  const stage = {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
   };
@@ -30,7 +30,7 @@ function normalizeOrder(item: any): Order {
     name,
     description,
     techniciansAssignedId,
-    status,
+    stage,
     companyName,
     email,
     phone,

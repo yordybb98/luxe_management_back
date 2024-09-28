@@ -1,6 +1,6 @@
 import { User } from '@prisma/client';
-import { Status } from './stage';
 import { Task } from './tasks';
+import { Stage } from './stage';
 
 export type Order = {
   id: number;
@@ -8,7 +8,7 @@ export type Order = {
   description: string;
   techniciansAssigned?: User[];
   techniciansAssignedId?: number[];
-  status: Status;
+  stage: Stage;
   companyName: string;
   email: string;
   phone: string;
