@@ -76,12 +76,14 @@ export class OrderController {
         orders = await searchOdooOrder(
           UID,
           'x_studio_designers_assigned',
+          'ilike',
           payload.sub,
         );
       } else if (userRoleName === 'technician') {
         orders = await searchOdooOrder(
           UID,
           'x_studio_technicians_assigned',
+          'ilike',
           payload.sub,
         );
       }
@@ -93,6 +95,15 @@ export class OrderController {
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
 
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (userRoleName === 'technician') {
+      normalizedOrders.forEach((order) => {
+        order.tasks = order.tasks.filter(
+          (task) => task.technicianId === payload.sub,
+        );
+      });
+    }
+
     const ordersWithUsers =
       await this.orderService.getOrdersWithUsers(normalizedOrders);
 
@@ -103,15 +114,32 @@ export class OrderController {
   }
 
   @Get(':id')
-  async getOrderById(@Param('id') id: string) /* : Promise<Order> */ {
+  async getOrderById(
+    @Param('id') id: string,
+    @Request() req,
+  ) /* : Promise<Order> */ {
     const UID = await authenticateFromOdoo();
     const orderFound = await getOdooOrderById(UID, +id);
+
+    const token = req.headers.authorization?.split(' ')[1];
+    //deserializando token
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: jwtConstants.secret,
+    });
+    const userRoleName = (payload.role.name as string).toLocaleLowerCase();
 
     //checking if order exists
     if (!orderFound) throw new NotFoundException('Order not found');
 
     //mapping input odoo object to Order type
     const normalizedOrder = normalizeOrder(orderFound[0]);
+
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (userRoleName === 'technician') {
+      normalizedOrder.tasks = normalizedOrder.tasks.filter(
+        (task) => task.technicianId === payload.sub,
+      );
+    }
 
     const orderWithUser = (
       await this.orderService.getOrdersWithUsers([normalizedOrder])
@@ -121,9 +149,12 @@ export class OrderController {
   }
 
   @Post(':id/finish')
-  async finishOrder(@Param('id') id: string) /* : Promise<Order> */ {
+  async finishOrder(
+    @Param('id') id: string,
+    @Request() req,
+  ) /* : Promise<Order> */ {
     const UID = await authenticateFromOdoo();
-    const normalizedOrder = await this.getOrderById(id);
+    const normalizedOrder = await this.getOrderById(id, req);
     const orderFound = normalizedOrder.order;
 
     if (!orderFound) throw new NotFoundException('Order not found');
@@ -225,7 +256,7 @@ export class OrderController {
       await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
 
       //Getting previous designers assigned
-      const order = await this.getOrderById(data.orderId.toString());
+      const order = await this.getOrderById(data.orderId.toString(), req);
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
 
       //Removing duplicates
@@ -277,7 +308,7 @@ export class OrderController {
       await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
 
       //Getting previous technicians assigned
-      const order = await this.getOrderById(data.orderId.toString());
+      const order = await this.getOrderById(data.orderId.toString(), req);
       const userAssignedIds = order.normalizedOrder.techniciansAssignedId;
 
       //Removing duplicates
@@ -298,7 +329,7 @@ export class OrderController {
       );
 
       //Getting previous tasks
-      const tasks = (await this.getOrderById(data.orderId.toString()))
+      const tasks = (await this.getOrderById(data.orderId.toString(), req))
         .normalizedOrder.tasks;
 
       //Creating new task
@@ -360,7 +391,7 @@ export class OrderController {
       // Reemplaza los caracteres inválidos por un guion bajo
       return name.replace(invalidChars, '_').trim();
     }
-    const order = await this.getOrderById(orderId);
+    const order = await this.getOrderById(orderId, req);
     const BASE_DIR = settings.BASE_ROOT_DIRECTORY;
     const currentYear = new Date().getFullYear().toString();
     const orderName = order.normalizedOrder.name;

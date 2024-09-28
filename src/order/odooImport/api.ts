@@ -358,7 +358,12 @@ const updateOdooOrder = async (
   }
 };
 
-const searchOdooOrder = async (uid, searchKey, searchValue): Promise<any[]> => {
+const searchOdooOrder = async (
+  uid,
+  searchKey,
+  comparisonOperator,
+  searchValue,
+): Promise<any[]> => {
   try {
     const orders = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
@@ -367,9 +372,9 @@ const searchOdooOrder = async (uid, searchKey, searchValue): Promise<any[]> => {
           db, // Database name
           uid, // User ID
           password, // Password
-          'crm.lead', // Model (crm.lead)
+          'crm.lead', // Model
           'search_read', // Method (search_read)
-          [[[searchKey, '=', searchValue]]], // Dynamic domain filter
+          [[[searchKey, comparisonOperator, searchValue]]], // Dynamic domain filter
           {},
         ],
         (err, orders) => {
