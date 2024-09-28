@@ -35,7 +35,7 @@ import { jwtConstants } from 'src/auth/constants';
 import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
-import { createFolders } from 'src/utils/utils';
+import { createFolders, sanitizePathName } from 'src/utils/utils';
 import { settings } from 'settings.config';
 import { Task } from 'src/common/types/tasks';
 const path = require('path');
@@ -88,8 +88,9 @@ export class OrderController {
         );
       }
     } else {
-      const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
-      orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder);
+      /* const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
+      orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder); */
+      orders = await getAllOddoOrders(UID);
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
@@ -387,15 +388,6 @@ export class OrderController {
 
   @Post(':orderId/createDirectory')
   async createDirectory(@Request() req, @Param('orderId') orderId: string) {
-    function sanitizeFolderName(name: string): string {
-      name = name.replace(/"/g, '');
-
-      // Define un regex para caracteres no válidos en nombres de carpeta
-      const invalidChars = /[<>:"/\\|?*\x00-\x1F]/g;
-
-      // Reemplaza los caracteres inválidos por un guion bajo
-      return name.replace(invalidChars, '_').trim();
-    }
     const order = await this.getOrderById(orderId, req);
     const BASE_DIR = settings.BASE_ROOT_DIRECTORY;
     const currentYear = new Date().getFullYear().toString();
@@ -403,10 +395,12 @@ export class OrderController {
     const companyName = order.normalizedOrder.companyName || orderName;
     const ORDER_PATH = path.join(
       BASE_DIR,
-      companyName,
+      sanitizePathName(companyName),
       currentYear,
-      sanitizeFolderName(orderName),
+      sanitizePathName(orderName),
     );
+
+    console.log(ORDER_PATH);
 
     try {
       for (const folder of settings.FOLDERS_STRUCTURE) {
