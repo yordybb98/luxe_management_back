@@ -21,8 +21,6 @@ export class CommonController {
       }
     }
 
-    console.log(uniqueStages);
-
     return uniqueStages;
   }
 }
