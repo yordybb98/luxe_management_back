@@ -139,34 +139,55 @@ export class OrderController {
 
   @Post(':orderId/finishTask/:taskId')
   async finishTask(
-    @Param('orderId') id: string,
+    @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
   ) /* : Promise<Order> */ {
     const UID = await authenticateFromOdoo();
 
     //Founding order
-    const orderFound = await getOdooOrderById(UID, +id);
+    const orderFound = await getOdooOrderById(UID, +orderId);
     if (!orderFound) throw new NotFoundException('Order not found');
 
     //Founding task
     const normalizedOrder = normalizeOrder(orderFound[0]);
-    const taskFound = normalizedOrder.tasks.find((task) => task.id === taskId);
+    const tasks = normalizedOrder.tasks;
+    const taskFound = tasks.find((task) => task.id === taskId);
     if (!taskFound) throw new NotFoundException('Task not found');
-
-    //Removing user assignment from order
-    await updateOdooOrder(UID, +id, 'x_studio_userasigned', '');
-
-    //Defining task finished date
-    taskFound.dateFinished = new Date();
 
     //Completing task
     taskFound.status = 'COMPLETED';
+    //Defining task finished date
+    taskFound.dateFinished = new Date();
+
+    //Removing technician assignment from task if there is not any other uncompleted task assigned to the same designer
+    if (taskFound.technicianId) {
+      const technicianId = taskFound.technicianId;
+      const uncompletedTasks = tasks.filter(
+        (task) =>
+          task.status !== 'COMPLETED' && task.technicianId === technicianId,
+      );
+
+      if (uncompletedTasks.length === 0) {
+        //Getting previous techinicians assigned
+        const techiniciansAssignedIds = normalizedOrder.techniciansAssignedId;
+        const updetedTechiniciansAssignedIds = techiniciansAssignedIds.filter(
+          (id) => id !== taskFound.technicianId,
+        );
+        //Removing user assignment from order
+        await updateOdooOrder(
+          UID,
+          +orderId,
+          'x_studio_technicians_assigned',
+          updetedTechiniciansAssignedIds,
+        );
+      }
+    }
 
     //Stringify task
-    const updatedTask = JSON.stringify(taskFound);
+    const updatedTasks = JSON.stringify(tasks);
 
     //Updating task
-    await updateOdooOrder(UID, +id, 'x_studio_tasks', updatedTask);
+    await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
   }
 
   @Post()
