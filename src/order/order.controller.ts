@@ -181,7 +181,7 @@ export class OrderController {
   async finishTask(
     @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
-  ) /* : Promise<Order> */ {
+  ): Promise<Task> {
     const UID = await authenticateFromOdoo();
 
     //Founding order
@@ -228,6 +228,8 @@ export class OrderController {
 
     //Updating task
     await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
+
+    return taskFound;
   }
 
   @Post()
