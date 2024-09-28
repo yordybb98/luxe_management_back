@@ -400,8 +400,6 @@ export class OrderController {
       sanitizePathName(orderName),
     );
 
-    console.log(ORDER_PATH);
-
     try {
       for (const folder of settings.FOLDERS_STRUCTURE) {
         await createFolders(path.join(ORDER_PATH, folder));
