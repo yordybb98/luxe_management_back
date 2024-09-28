@@ -123,7 +123,8 @@ export class OrderController {
   @Post(':id/finish')
   async finishOrder(@Param('id') id: string) /* : Promise<Order> */ {
     const UID = await authenticateFromOdoo();
-    const orderFound = await getOdooOrderById(UID, +id);
+    const normalizedOrder = await this.getOrderById(id);
+    const orderFound = normalizedOrder.order;
 
     if (!orderFound) throw new NotFoundException('Order not found');
 
@@ -132,6 +133,14 @@ export class OrderController {
 
     //Removing designer assignment from order
     await updateOdooOrder(UID, +id, 'x_studio_designers_assigned', '');
+
+    //Completing all uncompleted tasks
+    const tasks = normalizedOrder.normalizedOrder.tasks;
+    for (const task of tasks) {
+      if (task.status === 'IN-PROGRESS') {
+        await this.finishTask(id, task.id);
+      }
+    }
 
     //Changing order status
     await updateOdooOrder(UID, +id, 'stage_id', 5);
