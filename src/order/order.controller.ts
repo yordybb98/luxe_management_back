@@ -296,7 +296,7 @@ export class OrderController {
   }
 
   @Post('assignUser')
-  async assignUser(@Request() req, @Body() data: AssignUserDto): Promise<void> {
+  async assignUser(@Request() req, @Body() data: AssignUserDto): Promise<Task> {
     try {
       //checking if user exists
       const user = await this.usersService.getUserById(data.technicianId);
@@ -354,6 +354,8 @@ export class OrderController {
       console.log(
         `Order ${data.orderId} assigned to user ${user.name} with id ${data.technicianId}`,
       );
+
+      return newTask;
     } catch (err) {
       console.log({ err });
       throw new NotFoundException(err);
