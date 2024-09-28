@@ -87,7 +87,6 @@ export class OrderController {
           payload.sub,
         );
       }
-      console.log({ orders });
     } else {
       const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
       orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder);
@@ -290,7 +289,7 @@ export class OrderController {
         `Order ${data.orderId} assigned to designer ${data.designerId}`,
       );
     } catch (err) {
-      console.log({ err });
+      console.error({ err });
       throw new NotFoundException("Order doesn't exist");
     }
   }
@@ -357,7 +356,7 @@ export class OrderController {
 
       return newTask;
     } catch (err) {
-      console.log({ err });
+      console.error({ err });
       throw new NotFoundException(err);
     }
   }
@@ -413,7 +412,7 @@ export class OrderController {
       const uid = await authenticateFromOdoo();
       await updateOdooOrder(uid, +orderId, 'x_studio_directory', ORDER_PATH);
     } catch (err) {
-      console.log({ err });
+      console.error({ err });
       throw new ServiceUnavailableException('Could not create directory');
     }
   }
