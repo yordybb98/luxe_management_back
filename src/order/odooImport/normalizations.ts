@@ -5,7 +5,9 @@ function normalizeOrder(item: any): Order {
   const id = item.id;
   const name = item.name as string;
   const description = item.x_studio_order_description || '';
-  const userAssignedId = item.x_studio_userasigned as number;
+  const techniciansAssignedId = item.x_studio_technicians_assigned
+    ? JSON.parse(item.x_studio_technicians_assigned)
+    : [];
   const status = {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
@@ -17,7 +19,9 @@ function normalizeOrder(item: any): Order {
   const address = item.street || '';
   const website = item.website || '';
   const comments = item.x_studio_comment || '';
-  const designerId = item.x_studio_designer_id || 0;
+  const designersAssignedIds = item.x_studio_designers_assigned
+    ? JSON.parse(item.x_studio_designers_assigned)
+    : [];
   const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : [];
   const directory = item.x_studio_directory || '';
 
@@ -25,7 +29,7 @@ function normalizeOrder(item: any): Order {
     id,
     name,
     description,
-    userAssignedId,
+    techniciansAssignedId,
     status,
     companyName,
     email,
@@ -34,7 +38,7 @@ function normalizeOrder(item: any): Order {
     address,
     website,
     comments,
-    designerId,
+    designersAssignedIds,
     tasks,
     directory,
   };

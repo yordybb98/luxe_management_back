@@ -7,6 +7,7 @@ import {
   Param,
   NotFoundException,
   BadRequestException,
+  ServiceUnavailableException,
   Patch,
   Query,
   HttpCode,
@@ -74,13 +75,13 @@ export class OrderController {
       if (userRoleName === 'designer') {
         orders = await searchOdooOrder(
           UID,
-          'x_studio_designer_id',
+          'x_studio_designers_assigned',
           payload.sub,
         );
       } else if (userRoleName === 'technician') {
         orders = await searchOdooOrder(
           UID,
-          'x_studio_userasigned',
+          'x_studio_technicians_assigned',
           payload.sub,
         );
       }
@@ -127,10 +128,10 @@ export class OrderController {
     if (!orderFound) throw new NotFoundException('Order not found');
 
     //Removing user assignment from order
-    await updateOdooOrder(UID, +id, 'x_studio_userasigned', '');
+    await updateOdooOrder(UID, +id, 'x_studio_technicians_assigned', '');
 
     //Removing designer assignment from order
-    await updateOdooOrder(UID, +id, 'x_studio_designer_id', '');
+    await updateOdooOrder(UID, +id, 'x_studio_designers_assigned', '');
 
     //Changing order status
     await updateOdooOrder(UID, +id, 'stage_id', 5);
@@ -193,12 +194,26 @@ export class OrderController {
       //Changing order status to Production
       await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
 
+      //Getting previous designers assigned
+      const order = await this.getOrderById(data.orderId.toString());
+      const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
+
+      //Removing duplicates
+      const uniqueDesignerAssignedIds = new Set(designerAssignedIds);
+
+      //Adding designer
+      uniqueDesignerAssignedIds.add(data.designerId);
+
+      const parsedDesignerAssignedIds = JSON.stringify([
+        ...uniqueDesignerAssignedIds,
+      ]);
+
       //Assigning designer
       await updateOdooOrder(
         uid,
         data.orderId,
-        'x_studio_designer_id',
-        data.designerId,
+        'x_studio_designers_assigned',
+        parsedDesignerAssignedIds,
       );
 
       //Adding comment
@@ -222,22 +237,34 @@ export class OrderController {
   async assignUser(@Request() req, @Body() data: AssignUserDto): Promise<void> {
     try {
       //checking if user exists
-
       const user = await this.usersService.getUserById(data.technicianId);
       if (!user) throw new BadRequestException('Technician not found');
 
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
 
-      //Changing order status to Production//Changing order status to Production
+      //Changing order status to Production
       await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
 
-      //Assigning designer
+      //Getting previous technicians assigned
+      const order = await this.getOrderById(data.orderId.toString());
+      const userAssignedIds = order.normalizedOrder.techniciansAssignedId;
+
+      //Removing duplicates
+      const uniqueUserAssignedIds = new Set(userAssignedIds);
+
+      //Adding new user
+      uniqueUserAssignedIds.add(data.technicianId);
+
+      //Stringify users as array
+      const parsedUserAssignedIds = JSON.stringify([...uniqueUserAssignedIds]);
+
+      //Assigning user in odoo
       await updateOdooOrder(
         uid,
         data.orderId,
-        'x_studio_userasigned',
-        data.technicianId,
+        'x_studio_technicians_assigned',
+        parsedUserAssignedIds,
       );
 
       //Getting previous tasks
@@ -267,7 +294,7 @@ export class OrderController {
       );
     } catch (err) {
       console.log({ err });
-      throw new NotFoundException("Order doesn't exist");
+      throw new NotFoundException(err);
     }
   }
 
@@ -323,6 +350,7 @@ export class OrderController {
       await updateOdooOrder(uid, +orderId, 'x_studio_directory', ORDER_PATH);
     } catch (err) {
       console.log({ err });
+      throw new ServiceUnavailableException('Could not create directory');
     }
   }
 }

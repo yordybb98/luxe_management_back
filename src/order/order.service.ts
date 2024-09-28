@@ -3,6 +3,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from 'src/common/types/order';
 import { UserService } from 'src/user/user.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class OrderService {
@@ -26,14 +27,18 @@ export class OrderService {
   async getOrderById(id: number) {}
 
   async getOrdersWithUsers(orders: Order[]): Promise<Order[]> {
+    console.log({ orders });
     return await Promise.all(
       orders.map(async (order) => {
-        if (order.userAssignedId) {
+        if (order.techniciansAssignedId) {
           try {
-            const user = await this.usersService.getUserById(
-              order.userAssignedId,
-            );
-            return { ...order, userAssigned: user };
+            let techniciansAssigned: User[] = [];
+            order.techniciansAssignedId.forEach(async (technicianId) => {
+              const technicianData =
+                await this.usersService.getUserById(technicianId);
+              techniciansAssigned.push(technicianData);
+            });
+            return { ...order, userAssigned: techniciansAssigned };
           } catch (error) {
             console.error(`Failed to fetch user for order ${order.id}:`, error);
             return { ...order, userAssigned: null };
@@ -47,10 +52,15 @@ export class OrderService {
   async getOrdersWithDesigners(orders: Order[]): Promise<Order[]> {
     return await Promise.all(
       orders.map(async (order) => {
-        if (order.designerId) {
+        if (order.designersAssignedIds) {
           try {
-            const user = await this.usersService.getUserById(order.designerId);
-            return { ...order, designerAssigned: user };
+            let designersAssigned: User[] = [];
+            order.designersAssignedIds.forEach(async (designerId) => {
+              const designerData =
+                await this.usersService.getUserById(designerId);
+              designersAssigned.push(designerData);
+            });
+            return { ...order, designerAssigned: designersAssigned };
           } catch (error) {
             console.error(
               `Failed to fetch designer for order ${order.id}:`,

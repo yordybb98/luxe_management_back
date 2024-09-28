@@ -6,8 +6,8 @@ export type Order = {
   id: number;
   name: string;
   description: string;
-  userAssigned?: User;
-  userAssignedId?: number;
+  userAssigned?: User[];
+  techniciansAssignedId?: number[];
   status: Status;
   companyName: string;
   email: string;
@@ -16,7 +16,7 @@ export type Order = {
   address: string;
   website: string;
   comments: string;
-  designerId: number;
+  designersAssignedIds: number[];
   tasks?: Task[];
   directory: string;
 };
