@@ -104,11 +104,12 @@ export class OrderController {
       });
     }
 
-    const ordersWithUsers =
-      await this.orderService.getOrdersWithUsers(normalizedOrders);
+    const getOrdersWithTechnicians =
+      await this.orderService.getOrdersWithTechnicians(normalizedOrders);
 
-    const ordersWithDesigners =
-      await this.orderService.getOrdersWithDesigners(ordersWithUsers);
+    const ordersWithDesigners = await this.orderService.getOrdersWithDesigners(
+      getOrdersWithTechnicians,
+    );
 
     return ordersWithDesigners;
   }
@@ -142,7 +143,7 @@ export class OrderController {
     }
 
     const orderWithUser = (
-      await this.orderService.getOrdersWithUsers([normalizedOrder])
+      await this.orderService.getOrdersWithTechnicians([normalizedOrder])
     )[0];
 
     return { order: orderFound, normalizedOrder: orderWithUser };

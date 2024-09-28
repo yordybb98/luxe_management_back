@@ -26,25 +26,29 @@ export class OrderService {
 
   async getOrderById(id: number) {}
 
-  async getOrdersWithUsers(orders: Order[]): Promise<Order[]> {
-    console.log({ orders });
+  async getOrdersWithTechnicians(orders: Order[]): Promise<Order[]> {
     return await Promise.all(
       orders.map(async (order) => {
         if (order.techniciansAssignedId) {
           try {
             let techniciansAssigned: User[] = [];
-            order.techniciansAssignedId.forEach(async (technicianId) => {
+
+            for (const technicianId of order.techniciansAssignedId) {
               const technicianData =
                 await this.usersService.getUserById(technicianId);
               techniciansAssigned.push(technicianData);
-            });
-            return { ...order, userAssigned: techniciansAssigned };
+            }
+
+            return { ...order, techniciansAssigned };
           } catch (error) {
-            console.error(`Failed to fetch user for order ${order.id}:`, error);
-            return { ...order, userAssigned: null };
+            console.error(
+              `Failed to fetch technician for order ${order.id}:`,
+              error,
+            );
+            return { ...order, techniciansAssigned: null };
           }
         }
-        return { ...order, userAssigned: null };
+        return { ...order, techniciansAssigned: null };
       }),
     );
   }
@@ -55,21 +59,22 @@ export class OrderService {
         if (order.designersAssignedIds) {
           try {
             let designersAssigned: User[] = [];
-            order.designersAssignedIds.forEach(async (designerId) => {
+
+            for (const designerId of order.designersAssignedIds) {
               const designerData =
                 await this.usersService.getUserById(designerId);
               designersAssigned.push(designerData);
-            });
-            return { ...order, designerAssigned: designersAssigned };
+            }
+            return { ...order, designersAssigned };
           } catch (error) {
             console.error(
               `Failed to fetch designer for order ${order.id}:`,
               error,
             );
-            return { ...order, designerAssigned: null };
+            return { ...order, designersAssigned: null };
           }
         }
-        return { ...order, designerAssigned: null };
+        return { ...order, designersAssigned: null };
       }),
     );
   }

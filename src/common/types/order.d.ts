@@ -6,7 +6,7 @@ export type Order = {
   id: number;
   name: string;
   description: string;
-  userAssigned?: User[];
+  techniciansAssigned?: User[];
   techniciansAssignedId?: number[];
   status: Status;
   companyName: string;
@@ -16,6 +16,7 @@ export type Order = {
   address: string;
   website: string;
   comments: string;
+  designersAssigned?: User[];
   designersAssignedIds: number[];
   tasks?: Task[];
   directory: string;
