@@ -279,13 +279,14 @@ export class OrderController {
         parsedDesignerAssignedIds,
       );
 
-      //Adding comment
-      await updateOdooOrder(
-        uid,
-        data.orderId,
-        'x_studio_comment',
-        data.comment,
-      );
+      //Adding commentx
+      data.comment &&
+        (await updateOdooOrder(
+          uid,
+          data.orderId,
+          'x_studio_comment',
+          data.comment,
+        ));
 
       console.log(
         `Order ${data.orderId} assigned to designer ${data.designerId}`,
