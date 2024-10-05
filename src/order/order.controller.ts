@@ -57,6 +57,7 @@ export class OrderController {
     @Request() req,
     @Query('page') page,
     @Query('pageSize') pageSize,
+    @Query('search') search,
   ): Promise<GetAllOrdersResponseDto> {
     const token = req.headers.authorization?.split(' ')[1];
     //deserializando token
@@ -66,7 +67,6 @@ export class OrderController {
 
     let orders = [];
     let totalOrders = 0;
-
     //Authenticating Odoo
     const UID = await authenticateFromOdoo();
 
@@ -81,6 +81,7 @@ export class OrderController {
           payload.sub,
           page,
           pageSize,
+          search,
         );
         orders = data;
         totalOrders = total;
@@ -92,6 +93,7 @@ export class OrderController {
           payload.sub,
           page,
           pageSize,
+          search,
         );
         orders = data;
         totalOrders = total;
@@ -99,8 +101,14 @@ export class OrderController {
     } else {
       /* const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
       orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder); */
-      orders = await getAllOddoOrders(UID, page, pageSize);
-      totalOrders = await countAllOdooOrders();
+      const { data, total } = await getAllOddoOrders(
+        UID,
+        page,
+        pageSize,
+        search,
+      );
+      orders = data;
+      totalOrders = total;
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));

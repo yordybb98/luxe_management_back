@@ -85,11 +85,13 @@ const getOdooOrdersWithIds = async (
 const getAllOddoOrders = async (
   uid: number,
   page: number = 1,
-  limit: number = 10,
-): Promise<any[]> => {
+  limit: number = 5,
+  search: string = '',
+): Promise<{ data: Order[]; total: number }> => {
   const offset = (page - 1) * limit;
+  const searchDomain = search ? [['name', 'ilike', search]] : [];
 
-  return new Promise((resolve, reject) => {
+  const orders = (await new Promise((resolve, reject) => {
     modelsClient.methodCall(
       'execute_kw',
       [
@@ -98,7 +100,7 @@ const getAllOddoOrders = async (
         password,
         'crm.lead',
         'search_read',
-        [[]],
+        [searchDomain],
         { fields: ['name', 'id'], offset, limit, order: 'create_date DESC' },
       ],
       (err, data) => {
@@ -109,7 +111,22 @@ const getAllOddoOrders = async (
         }
       },
     );
-  });
+  })) as Order[];
+
+  const totalOrders = (await new Promise((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [db, uid, password, 'crm.lead', 'search_count', [searchDomain]],
+      (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      },
+    );
+  })) as number;
+  return { data: orders, total: totalOrders };
 };
 
 const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
@@ -207,9 +224,17 @@ const searchOdooOrder = async (
   searchValue,
   page: number = 1,
   limit: number = 5,
+  search: string = '',
 ): Promise<{ data: any[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
+    const searchDomain = search
+      ? [
+          ['name', 'ilike', search],
+          '|',
+          ['x_studio_order_description', 'ilike', search],
+        ]
+      : [];
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -219,7 +244,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_read', // Method (search_read)
-          [[[searchKey, comparisonOperator, searchValue]]], // Dynamic domain filter
+          [[[searchKey, comparisonOperator, searchValue], searchDomain]], // Dynamic domain filter
           { offset, limit }, // Dynamic fields
         ],
         (err, orders) => {
