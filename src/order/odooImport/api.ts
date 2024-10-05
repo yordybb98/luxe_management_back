@@ -89,7 +89,13 @@ const getAllOddoOrders = async (
   search: string = '',
 ): Promise<{ data: Order[]; total: number }> => {
   const offset = (page - 1) * limit;
-  const searchDomain = search ? [['name', 'ilike', search]] : [];
+  const searchDomain = search
+    ? [
+        '|',
+        ['name', 'ilike', search],
+        ['x_studio_order_description', 'ilike', search],
+      ]
+    : [];
 
   const orders = (await new Promise((resolve, reject) => {
     modelsClient.methodCall(
@@ -101,7 +107,7 @@ const getAllOddoOrders = async (
         'crm.lead',
         'search_read',
         [searchDomain],
-        { fields: ['name', 'id'], offset, limit, order: 'create_date DESC' },
+        { offset, limit, order: 'create_date DESC' },
       ],
       (err, data) => {
         if (err) {
@@ -230,11 +236,18 @@ const searchOdooOrder = async (
     const offset = (page - 1) * limit;
     const searchDomain = search
       ? [
+          '|', // Start OR condition
           ['name', 'ilike', search],
-          '|',
           ['x_studio_order_description', 'ilike', search],
         ]
       : [];
+
+    // Combine the search key and comparison operator with the search domain
+    const domain =
+      searchKey && comparisonOperator && searchValue
+        ? [[searchKey, comparisonOperator, searchValue], ...searchDomain]
+        : searchDomain;
+
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -244,7 +257,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_read', // Method (search_read)
-          [[[searchKey, comparisonOperator, searchValue], searchDomain]], // Dynamic domain filter
+          [domain], // Dynamic domain filter
           { offset, limit }, // Dynamic fields
         ],
         (err, orders) => {
@@ -266,7 +279,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_count', // Method (search_read)
-          [[[searchKey, comparisonOperator, searchValue]]], // Dynamic domain filter
+          [domain], // Dynamic domain filter
         ],
         (err, orders) => {
           if (err) {
