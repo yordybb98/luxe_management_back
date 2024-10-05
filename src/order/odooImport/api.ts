@@ -1,3 +1,5 @@
+import { Order } from '../entities/order.entity';
+
 const xmlrpc = require('xmlrpc');
 const fs = require('fs');
 
@@ -80,39 +82,34 @@ const getOdooOrdersWithIds = async (
   }
 };
 
-const getAllOddoOrders = async (uid: number): Promise<any[]> => {
-  try {
-    const allRecords = await new Promise((resolve, reject) => {
-      // Step 1: Get all IDs
-      modelsClient.methodCall(
-        'execute_kw',
-        [db, uid, password, 'crm.lead', 'search', [[]]], // Get all IDs
-        (err: any, ids: any[]) => {
-          if (err) {
-            reject(err);
-          } else {
-            // Step 2: Use `read` to get details of all records
-            modelsClient.methodCall(
-              'execute_kw',
-              [db, uid, password, 'crm.lead', 'read', [ids]], // Read all records
-              (err: any, records: any[]) => {
-                if (err) {
-                  reject(err);
-                } else {
-                  resolve(records); // `records` contains details of all records
-                }
-              },
-            );
-          }
-        },
-      );
-    });
+const getAllOddoOrders = async (
+  uid: number,
+  page: number = 1,
+  limit: number = 10,
+): Promise<any[]> => {
+  const offset = (page - 1) * limit;
 
-    return allRecords as any[];
-  } catch (err) {
-    console.error('Error getting Odoo orders:', err);
-    return [];
-  }
+  return new Promise((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'crm.lead',
+        'search_read',
+        [[]],
+        { fields: ['name', 'id'], offset, limit, order: 'create_date DESC' },
+      ],
+      (err, data) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(data);
+        }
+      },
+    );
+  });
 };
 
 const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
@@ -208,9 +205,12 @@ const searchOdooOrder = async (
   searchKey,
   comparisonOperator,
   searchValue,
-): Promise<any[]> => {
+  page: number = 1,
+  limit: number = 5,
+): Promise<{ data: any[]; total: number }> => {
   try {
-    const orders = await new Promise((resolve, reject) => {
+    const offset = (page - 1) * limit;
+    const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
         [
@@ -220,7 +220,7 @@ const searchOdooOrder = async (
           'crm.lead', // Model
           'search_read', // Method (search_read)
           [[[searchKey, comparisonOperator, searchValue]]], // Dynamic domain filter
-          {},
+          { offset, limit }, // Dynamic fields
         ],
         (err, orders) => {
           if (err) {
@@ -230,13 +230,58 @@ const searchOdooOrder = async (
           }
         },
       );
-    });
+    })) as Order[];
 
-    return orders as any[];
+    const total = (await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db, // Database name
+          uid, // User ID
+          password, // Password
+          'crm.lead', // Model
+          'search_count', // Method (search_read)
+          [[[searchKey, comparisonOperator, searchValue]]], // Dynamic domain filter
+        ],
+        (err, orders) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(orders);
+          }
+        },
+      );
+    })) as number;
+
+    return { data: orders, total };
   } catch (err) {
     console.error('Error fetching orders:', err);
-    return [];
+    return { data: [], total: 0 };
   }
+};
+
+const countAllOdooOrders = async (): Promise<number> => {
+  const uid = await authenticateFromOdoo();
+  return new Promise((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password, // Password
+        'crm.lead',
+        'search_count',
+        [[]],
+      ],
+      (err, count) => {
+        if (err) {
+          reject(err);
+        } else {
+          resolve(count);
+        }
+      },
+    );
+  });
 };
 
 export {
@@ -245,8 +290,9 @@ export {
   getOdooStages,
   // getOdooEmployees,
   getOdooOrdersWithIds,
-  getAllOddoOrders,
   getOdooOrderById,
   updateOdooOrder,
   searchOdooOrder,
+  getAllOddoOrders,
+  countAllOdooOrders,
 };

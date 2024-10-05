@@ -23,6 +23,7 @@ import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { GetOrderDto } from './dto/get-order.dto';
 import {
   authenticateFromOdoo,
+  countAllOdooOrders,
   getAllOddoOrders,
   getOdooOrderById,
   getOdooOrdersWithIds,
@@ -38,6 +39,7 @@ import { randomUUID } from 'crypto';
 import { createFolders, sanitizePathName } from 'src/utils/utils';
 import { settings } from 'settings.config';
 import { Task } from 'src/common/types/tasks';
+import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
 const path = require('path');
 
 @ApiTags('order')
@@ -53,15 +55,9 @@ export class OrderController {
   @Permissions('ViewOrders')
   async getAllOrders(
     @Request() req,
-    @Query('email') email: string,
-  ): Promise<Order[]> {
-    // if (email) {
-    //   const user = await this.usersService.getUserByEmail(email);
-    //   if (!user) throw new NotFoundException('User not found');
-    //   return this.orderService.getOrdersByUserEmail(email);
-    // }
-    // return this.orderService.getAllOrders();
-
+    @Query('page') page,
+    @Query('pageSize') pageSize,
+  ): Promise<GetAllOrdersResponseDto> {
     const token = req.headers.authorization?.split(' ')[1];
     //deserializando token
     const payload = await this.jwtService.verifyAsync(token, {
@@ -69,28 +65,42 @@ export class OrderController {
     });
 
     let orders = [];
+    let totalOrders = 0;
+
+    //Authenticating Odoo
     const UID = await authenticateFromOdoo();
+
+    //Getting orders from odoo based on user role
     const userRoleName = (payload.role.name as string).toLocaleLowerCase();
     if (userRoleName !== 'admin') {
       if (userRoleName === 'designer') {
-        orders = await searchOdooOrder(
+        const { data, total } = await searchOdooOrder(
           UID,
           'x_studio_designers_assigned',
           'ilike',
           payload.sub,
+          page,
+          pageSize,
         );
+        orders = data;
+        totalOrders = total;
       } else if (userRoleName === 'technician') {
-        orders = await searchOdooOrder(
+        const { data, total } = await searchOdooOrder(
           UID,
           'x_studio_technicians_assigned',
           'ilike',
           payload.sub,
+          page,
+          pageSize,
         );
+        orders = data;
+        totalOrders = total;
       }
     } else {
       /* const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
       orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder); */
-      orders = await getAllOddoOrders(UID);
+      orders = await getAllOddoOrders(UID, page, pageSize);
+      totalOrders = await countAllOdooOrders();
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
@@ -111,7 +121,7 @@ export class OrderController {
       getOrdersWithTechnicians,
     );
 
-    return ordersWithDesigners;
+    return { data: ordersWithDesigners, total: totalOrders };
   }
 
   @Get(':id')
