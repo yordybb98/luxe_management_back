@@ -40,6 +40,7 @@ import { createFolders, sanitizePathName } from 'src/utils/utils';
 import { settings } from 'settings.config';
 import { Task } from 'src/common/types/tasks';
 import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
+import { Permission } from '@prisma/client';
 const path = require('path');
 
 @ApiTags('order')
@@ -52,7 +53,7 @@ export class OrderController {
   ) {}
 
   @Get()
-  @Permissions('ViewOrders')
+  @Permissions(Permission.ViewOrders)
   async getAllOrders(
     @Request() req,
     @Query('page') page,
@@ -133,6 +134,7 @@ export class OrderController {
   }
 
   @Get(':id')
+  @Permissions(Permission.ViewOrders)
   async getOrderById(
     @Param('id') id: string,
     @Request() req,
@@ -168,6 +170,7 @@ export class OrderController {
   }
 
   @Post(':id/finish')
+  @Permissions(Permission.FinishOrders)
   async finishOrder(
     @Param('id') id: string,
     @Request() req,
@@ -197,6 +200,7 @@ export class OrderController {
   }
 
   @Post(':orderId/finishTask/:taskId')
+  @Permissions(Permission.FinishTasks)
   async finishTask(
     @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
@@ -252,6 +256,7 @@ export class OrderController {
   }
 
   @Post()
+  @Permissions(Permission.CreateOrders)
   async createOrder(@Body() data: CreateOrderDto) /* : Promise<Order> */ {
     /* //checking if user exists
     const user = await this.usersService.getUserById(data.userId);
@@ -261,6 +266,7 @@ export class OrderController {
   }
 
   @Post('assignDesigner')
+  @Permissions(Permission.AsignOrders)
   async assignDesigner(
     @Request() req,
     @Body() data: AssignDesignerDto,
@@ -317,6 +323,7 @@ export class OrderController {
   }
 
   @Post('assignUser')
+  @Permissions(Permission.AsignOrders)
   async assignUser(@Request() req, @Body() data: AssignUserDto): Promise<Task> {
     try {
       //checking if user exists
@@ -384,6 +391,7 @@ export class OrderController {
   }
 
   @Patch(':id')
+  @Permissions(Permission.UpdateOrders)
   async updateOrder(
     @Param('id') id: string,
     @Body() data: Order,
@@ -396,6 +404,7 @@ export class OrderController {
   }
 
   @Delete(':id')
+  @Permissions(Permission.DeleteOrders)
   async deleteOrder(@Param('id') id: string) /* : Promise<Order> */ {
     /* try {
       return await this.orderService.deleteOrder(Number(id));
@@ -405,6 +414,7 @@ export class OrderController {
   }
 
   @Post(':orderId/createDirectory')
+  @Permissions(Permission.CreateOrders)
   async createDirectory(@Request() req, @Param('orderId') orderId: string) {
     const order = await this.getOrderById(orderId, req);
     const BASE_DIR = settings.BASE_ROOT_DIRECTORY;

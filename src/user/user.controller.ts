@@ -8,16 +8,19 @@ import {
   Param,
   Patch,
   Post,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from '@prisma/client';
+import { Permission, User } from '@prisma/client';
 import { CreateUserDto } from './dto/createUserDto';
 import * as bcrypt from 'bcrypt';
 import { PublicUserData } from './dto/publicUserData';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
+import { Request } from 'express';
+import { Permissions } from 'src/common/decorators/permissions.decorators';
 
 @ApiTags('user')
 @Controller('users')
@@ -28,6 +31,7 @@ export class UserController {
   ) {}
 
   @Get()
+  @Permissions(Permission.ViewUsers)
   async getAllUsers(): Promise<PublicUserData[]> {
     const users = await this.userService.getAllUsers();
 
@@ -39,6 +43,7 @@ export class UserController {
 
   @Get(':id')
   @UseGuards(AuthGuard)
+  @Permissions(Permission.ViewUsers)
   async getUserById(@Param('id') id: string): Promise<User> {
     const userFound = await this.userService.getUserById(Number(id));
     if (!userFound) throw new NotFoundException('User not found');
@@ -46,6 +51,7 @@ export class UserController {
   }
 
   @Post()
+  @Permissions(Permission.CreateUsers)
   async createUser(@Body() data: CreateUserDto): Promise<PublicUserData> {
     //checking if user already exists
     const userExists = await this.userService.getUserByEmail(data.email);
@@ -81,6 +87,7 @@ export class UserController {
   }
 
   @Patch(':id')
+  @Permissions(Permission.UpdateUsers)
   async updateUser(@Param('id') id: string, @Body() data: User): Promise<User> {
     try {
       return await this.userService.updateUser(Number(id), data);
@@ -90,6 +97,7 @@ export class UserController {
   }
 
   @Delete(':id')
+  @Permissions(Permission.DeleteUsers)
   async deleteUser(@Param('id') id: string): Promise<PublicUserData> {
     try {
       const userDeleted = await this.userService.deleteUser(Number(id));
