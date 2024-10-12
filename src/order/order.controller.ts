@@ -10,8 +10,6 @@ import {
   ServiceUnavailableException,
   Patch,
   Query,
-  HttpCode,
-  HttpStatus,
   Request,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
@@ -20,13 +18,10 @@ import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
-import { GetOrderDto } from './dto/get-order.dto';
 import {
   authenticateFromOdoo,
-  countAllOdooOrders,
   getAllOddoOrders,
   getOdooOrderById,
-  getOdooOrdersWithIds,
   searchOdooOrder,
   updateOdooOrder,
 } from './odooImport/api';
@@ -41,6 +36,7 @@ import { settings } from 'settings.config';
 import { Task } from 'src/common/types/tasks';
 import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
 import { Permission } from '@prisma/client';
+import { EditTaskDto } from './dto/edit-task.dto';
 const path = require('path');
 
 @ApiTags('order')
@@ -253,6 +249,71 @@ export class OrderController {
     await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
 
     return taskFound;
+  }
+
+  @Patch(':orderId/editTask/:taskId')
+  @Permissions(Permission.EditTasks)
+  async editTask(
+    @Param('orderId') orderId: string,
+    @Param('taskId') taskId: string,
+    @Body() data: EditTaskDto,
+  ): Promise<Task> {
+    const UID = await authenticateFromOdoo();
+
+    //Founding order
+    const orderFound = await getOdooOrderById(UID, +orderId);
+    if (!orderFound) throw new NotFoundException('Order not found');
+
+    //Founding task
+    const normalizedOrder = normalizeOrder(orderFound[0]);
+    const tasks = normalizedOrder.tasks;
+    const taskFound = tasks.find((task) => task.id === taskId);
+    if (!taskFound) throw new NotFoundException('Task not found');
+
+    //Editing task
+    const updatedTask = { ...taskFound, ...data };
+    updatedTask.updatedAt = new Date();
+
+    //Updating and mapping older tasks
+    const updatedTasks = tasks.map((task) =>
+      task.id === taskId ? updatedTask : task,
+    );
+
+    //Removing technician assignment from task if there is not any other uncompleted task assigned to the same technician
+    if (data.technicianId) {
+      const technicianId = data.technicianId;
+      const uncompletedTasks = updatedTasks.filter(
+        (task) =>
+          task.status !== 'COMPLETED' && task.technicianId === technicianId,
+      );
+
+      if (uncompletedTasks.length === 0) {
+        //Getting previous techinicians assigned
+        const techiniciansAssignedIds = normalizedOrder.techniciansAssignedId;
+        const updetedTechiniciansAssignedIds = techiniciansAssignedIds.filter(
+          (id) => id !== data.technicianId,
+        );
+        //Removing user assignment from order
+        await updateOdooOrder(
+          UID,
+          +orderId,
+          'x_studio_technicians_assigned',
+          updetedTechiniciansAssignedIds,
+        );
+      }
+    }
+    //Stringify task
+    const stringifiedUpdatedTasks = JSON.stringify(updatedTasks);
+
+    //Updating task in Odoo
+    await updateOdooOrder(
+      UID,
+      +orderId,
+      'x_studio_tasks',
+      stringifiedUpdatedTasks,
+    );
+
+    return updatedTask;
   }
 
   @Post()
