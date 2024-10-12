@@ -316,6 +316,67 @@ export class OrderController {
     return updatedTask;
   }
 
+  @Delete(':orderId/cancelTask/:taskId')
+  @Permissions(Permission.CancelTasks)
+  async CancelTask(
+    @Param('orderId') orderId: string,
+    @Param('taskId') taskId: string,
+    @Body() data: EditTaskDto,
+  ): Promise<Task> {
+    const UID = await authenticateFromOdoo();
+
+    //Founding order
+    const orderFound = await getOdooOrderById(UID, +orderId);
+    if (!orderFound) throw new NotFoundException('Order not found');
+
+    //Founding task
+    const normalizedOrder = normalizeOrder(orderFound[0]);
+    const tasks = normalizedOrder.tasks;
+    const taskFound = tasks.find((task) => task.id === taskId);
+    if (!taskFound) throw new NotFoundException('Task not found');
+
+    //Editing task
+    taskFound.status = 'CANCELLED';
+    taskFound.updatedAt = new Date();
+
+    //Removing technician assignment from task if there is not any other uncompleted task assigned to the same designer
+    if (taskFound.technicianId) {
+      const technicianId = taskFound.technicianId;
+      const uncompletedTasks = tasks.filter(
+        (task) =>
+          task.status === 'IN-PROGRESS' && task.technicianId === technicianId,
+      );
+
+      if (uncompletedTasks.length === 0) {
+        //Getting previous techinicians assigned
+        const techiniciansAssignedIds = normalizedOrder.techniciansAssignedId;
+        const updetedTechiniciansAssignedIds = techiniciansAssignedIds.filter(
+          (id) => id !== taskFound.technicianId,
+        );
+        //Removing user assignment from order
+        await updateOdooOrder(
+          UID,
+          +orderId,
+          'x_studio_technicians_assigned',
+          updetedTechiniciansAssignedIds,
+        );
+      }
+    }
+
+    //Stringify task
+    const stringifiedUpdatedTasks = JSON.stringify(tasks);
+
+    //Updating task in Odoo
+    await updateOdooOrder(
+      UID,
+      +orderId,
+      'x_studio_tasks',
+      stringifiedUpdatedTasks,
+    );
+
+    return taskFound;
+  }
+
   @Post()
   @Permissions(Permission.CreateOrders)
   async createOrder(@Body() data: CreateOrderDto) /* : Promise<Order> */ {
