@@ -266,7 +266,7 @@ export class OrderController {
   }
 
   @Post('assignDesigner')
-  @Permissions(Permission.AsignOrders)
+  @Permissions(Permission.AssignDesigner)
   async assignDesigner(
     @Request() req,
     @Body() data: AssignDesignerDto,
@@ -322,9 +322,12 @@ export class OrderController {
     }
   }
 
-  @Post('assignUser')
-  @Permissions(Permission.AsignOrders)
-  async assignUser(@Request() req, @Body() data: AssignUserDto): Promise<Task> {
+  @Post('assignTechnician')
+  @Permissions(Permission.AssignTechnician)
+  async assignTechnician(
+    @Request() req,
+    @Body() data: AssignUserDto,
+  ): Promise<Task> {
     try {
       //checking if user exists
       const user = await this.usersService.getUserById(data.technicianId);

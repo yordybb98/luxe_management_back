@@ -19,7 +19,8 @@ enum Permission {
   CreateOrders
   UpdateOrders
   DeleteOrders
-  AsignOrders
+  AssignTechnician
+  AssignDesigner
   FinishOrders
   FinishTasks
 

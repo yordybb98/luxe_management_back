@@ -2,12 +2,13 @@ import { Injectable } from '@nestjs/common';
 import { User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/createUserDto';
+import { UserResponseDto } from './dto/getAllUsersResponseDto';
 
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
 
-  async getAllUsers(): Promise<User[]> {
+  async getAllUsers(): Promise<UserResponseDto[]> {
     return this.prisma.user.findMany({
       include: {
         role: true,

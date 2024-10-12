@@ -8,7 +8,6 @@ import {
   Param,
   Patch,
   Post,
-  Req,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -21,6 +20,7 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
 import { Request } from 'express';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
+import { UserResponseDto } from './dto/getAllUsersResponseDto';
 
 @ApiTags('user')
 @Controller('users')
@@ -32,13 +32,41 @@ export class UserController {
 
   @Get()
   @Permissions(Permission.ViewUsers)
-  async getAllUsers(): Promise<PublicUserData[]> {
+  async getAllUsers(): Promise<UserResponseDto[]> {
+    const users = await this.userService.getAllUsers();
+    //removing sensitive data
+    const publicUsersData = users.map(({ password, ...rest }) => rest);
+    return publicUsersData;
+  }
+
+  @Get('/technicians')
+  @Permissions(Permission.AssignTechnician)
+  async getAllTechnicians(): Promise<UserResponseDto[]> {
     const users = await this.userService.getAllUsers();
 
     //removing sensitive data
     const publicUsersData = users.map(({ password, ...rest }) => rest);
 
-    return publicUsersData;
+    const technicians = publicUsersData.filter(
+      (user) => user.role.name.toLocaleLowerCase() === 'technician',
+    );
+
+    return technicians;
+  }
+
+  @Get('/designers')
+  @Permissions(Permission.AssignDesigner)
+  async getAllDesigners(): Promise<UserResponseDto[]> {
+    const users = await this.userService.getAllUsers();
+
+    //removing sensitive data
+    const publicUsersData = users.map(({ password, ...rest }) => rest);
+
+    const designers = publicUsersData.filter(
+      (user) => user.role.name.toLocaleLowerCase() === 'designer',
+    );
+
+    return designers;
   }
 
   @Get(':id')
