@@ -434,10 +434,6 @@ export class OrderController {
           'x_studio_comment',
           data.comment,
         ));
-
-      console.log(
-        `Order ${data.orderId} assigned to designer ${data.designerId}`,
-      );
     } catch (err) {
       console.error({ err });
       throw new NotFoundException("Order doesn't exist");
@@ -503,10 +499,6 @@ export class OrderController {
 
       //Updating odoo tasks
       await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', parsedTasks);
-
-      console.log(
-        `Order ${data.orderId} assigned to user ${user.name} with id ${data.technicianId}`,
-      );
 
       return newTask;
     } catch (err) {
