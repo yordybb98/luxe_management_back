@@ -3,6 +3,34 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+const readline = require('readline');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+});
+
+function askForPassword() {
+  return new Promise((resolve) => {
+    rl.stdoutMuted = true; // Mute the output for password
+    rl.question('Enter your password: ', (password) => {
+      rl.stdoutMuted = false; // Unmute for next question
+      console.log('\n');
+      resolve(password);
+    });
+
+    // Mute the output while typing
+    rl._writeToOutput = function (string) {
+      if (rl.stdoutMuted) {
+        // Don't print anything to the console
+        rl.output.write('\u001b[2K\u001b[200D'); // Clear the line
+      } else {
+        rl.output.write(string);
+      }
+    };
+  });
+}
+
 async function main() {
   const adminPermissions: Permission[] = Object.values(Permission);
 
@@ -62,7 +90,10 @@ async function main() {
 
   if (!adminExists) {
     // Crear un usuario admin por defecto
-    const hashedPassword = await bcrypt.hash('admin', 10);
+
+    //Askign for password
+    const password = (await askForPassword()) as string;
+    const hashedPassword = await bcrypt.hash(password, 10);
 
     adminExists = await prisma.user.create({
       data: {
