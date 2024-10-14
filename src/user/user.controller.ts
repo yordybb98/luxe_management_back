@@ -40,7 +40,7 @@ export class UserController {
   }
 
   @Get('/technicians')
-  @Permissions(Permission.AssignTechnician)
+  @Permissions(Permission.ViewOrders)
   async getAllTechnicians(): Promise<UserResponseDto[]> {
     const users = await this.userService.getAllUsers();
 
