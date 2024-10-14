@@ -394,6 +394,10 @@ export class OrderController {
     @Body() data: AssignDesignerDto,
   ): Promise<void> {
     try {
+      //checking if order exists
+      const order = await this.getOrderById(data.orderId.toString(), req);
+      if (!order) throw new BadRequestException('Order not found');
+
       //checking if user exists
       const user = await this.usersService.getUserById(data.designerId);
       if (!user) throw new BadRequestException('Designer not found');
@@ -405,7 +409,6 @@ export class OrderController {
       await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
 
       //Getting previous designers assigned
-      const order = await this.getOrderById(data.orderId.toString(), req);
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
 
       //Removing duplicates
