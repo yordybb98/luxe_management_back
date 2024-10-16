@@ -12,7 +12,7 @@ function normalizeOrder(item: any): Order {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
   };
-  const companyName = item.partner_name || '';
+  const companyName = item.partner_id[1] || '';
   const email = item.email_from || '';
   const phone = item.phone || '';
   const mobile = item.mobile || '';
