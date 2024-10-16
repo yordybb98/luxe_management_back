@@ -554,6 +554,8 @@ export class OrderController {
       }
       const uid = await authenticateFromOdoo();
       await updateOdooOrder(uid, +orderId, 'x_studio_directory', ORDER_PATH);
+
+      return ORDER_PATH;
     } catch (err) {
       console.error({ err });
       throw new ServiceUnavailableException('Could not create directory');
