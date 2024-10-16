@@ -1,7 +1,6 @@
 export const settings = {
   // DIRECTORY CONFIGS
-  BASE_ROOT_DIRECTORY:
-    /* '\\\\LUXE_BACKUP\\Luxe Files\\TEST' */ 'C:\\yordanbb\\Server',
+  BASE_ROOT_DIRECTORY:'\\\\LUXE_BACKUP\\Luxe Files\\_Disenos' ,
   FOLDERS_STRUCTURE: [
     'Admon',
     'Arte Final',
