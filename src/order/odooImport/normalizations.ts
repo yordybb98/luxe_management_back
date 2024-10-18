@@ -24,6 +24,7 @@ function normalizeOrder(item: any): Order {
     : [];
   const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : [];
   const directory = item.x_studio_directory || '';
+  const created_at = item.create_date ? new Date(item.create_date) : null;
 
   return {
     id,
@@ -41,6 +42,7 @@ function normalizeOrder(item: any): Order {
     designersAssignedIds,
     tasks,
     directory,
+    created_at,
   };
 }
 
