@@ -92,6 +92,7 @@ async function main() {
     // Crear un usuario admin por defecto
 
     //Askign for password
+    console.log("Creating 'admin' user ...");
     const password = (await askForPassword()) as string;
     const hashedPassword = await bcrypt.hash(password, 10);
 

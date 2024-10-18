@@ -16,6 +16,7 @@ enum Permission {
   // DeleteDepartments
 
   ViewOrders
+  ViewAllOrders
   CreateOrders
   UpdateOrders
   DeleteOrders

@@ -66,10 +66,21 @@ export class OrderController {
     let totalOrders = 0;
     //Authenticating Odoo
     const UID = await authenticateFromOdoo();
-
     //Getting orders from odoo based on user role
     const userRoleName = (payload.role.name as string).toLocaleLowerCase();
-    if (userRoleName !== 'admin') {
+    const canViewAllOrders = payload.role.permissions.includes(
+      Permission.ViewAllOrders,
+    );
+    if (canViewAllOrders) {
+      const { data, total } = await getAllOddoOrders(
+        UID,
+        page,
+        pageSize,
+        search,
+      );
+      orders = data;
+      totalOrders = total;
+    } else {
       if (userRoleName === 'designer') {
         const { data, total } = await searchOdooOrder(
           UID,
@@ -95,17 +106,6 @@ export class OrderController {
         orders = data;
         totalOrders = total;
       }
-    } else {
-      /* const onlyDevelopOrder = [1796, 200, 525, 127, 905, 368, 111, 1852];
-      orders = await getOdooOrdersWithIds(UID, onlyDevelopOrder); */
-      const { data, total } = await getAllOddoOrders(
-        UID,
-        page,
-        pageSize,
-        search,
-      );
-      orders = data;
-      totalOrders = total;
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
@@ -405,8 +405,8 @@ export class OrderController {
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
 
-      //Changing order status to Production
-      await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
+      //Changing order status to Propousal
+      await updateOdooOrder(uid, data.orderId, 'stage_id', 9);
 
       //Getting previous designers assigned
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
@@ -534,7 +534,6 @@ export class OrderController {
   }
 
   @Post(':orderId/createDirectory')
-  @Permissions(Permission.CreateOrders)
   async createDirectory(@Request() req, @Param('orderId') orderId: string) {
     const order = await this.getOrderById(orderId, req);
     const BASE_DIR = settings.BASE_ROOT_DIRECTORY;

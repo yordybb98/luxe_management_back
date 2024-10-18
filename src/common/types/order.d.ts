@@ -20,4 +20,5 @@ export type Order = {
   designersAssignedIds: number[];
   tasks?: Task[];
   directory: string;
+  created_at: Date;
 };
