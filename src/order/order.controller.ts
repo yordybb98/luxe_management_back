@@ -405,8 +405,8 @@ export class OrderController {
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
 
-      //Changing order status to Production
-      await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
+      //Changing order status to Propousal
+      await updateOdooOrder(uid, data.orderId, 'stage_id', 9);
 
       //Getting previous designers assigned
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
