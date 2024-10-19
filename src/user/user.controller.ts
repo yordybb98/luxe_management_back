@@ -81,10 +81,21 @@ export class UserController {
   @Post()
   @Permissions(Permission.CreateUsers)
   async createUser(@Body() data: CreateUserDto): Promise<PublicUserData> {
-    //checking if user already exists
-    const userExists = await this.userService.getUserByEmail(data.email);
-    if (userExists) {
-      throw new BadRequestException('User already exists');
+    //checking if email was provided
+    if (data.email) {
+      //checking if email already exists
+      const emailExists = await this.userService.getUserByEmail(data.email);
+      if (emailExists) {
+        throw new BadRequestException('Email already in use');
+      }
+    }
+
+    //checking if username already exists
+    const usernameExists = await this.userService.getUserByUsername(
+      data.username,
+    );
+    if (usernameExists) {
+      throw new BadRequestException('Username already in use');
     }
 
     //cheking if roleExists

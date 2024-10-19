@@ -19,6 +19,7 @@ export class CreateUserDto {
   username: string;
 
   @IsEmail()
+  @IsOptional()
   email: string;
 
   @IsString()
