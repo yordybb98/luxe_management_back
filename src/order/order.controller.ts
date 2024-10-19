@@ -54,6 +54,7 @@ export class OrderController {
     @Request() req,
     @Query('page') page,
     @Query('pageSize') pageSize,
+    @Query('stageId') stageId,
     @Query('search') search,
   ): Promise<GetAllOrdersResponseDto> {
     const token = req.headers.authorization?.split(' ')[1];
@@ -77,6 +78,7 @@ export class OrderController {
         page,
         pageSize,
         search,
+        +stageId,
       );
       orders = data;
       totalOrders = total;
@@ -90,6 +92,7 @@ export class OrderController {
           page,
           pageSize,
           search,
+          +stageId,
         );
         orders = data;
         totalOrders = total;
@@ -102,6 +105,7 @@ export class OrderController {
           page,
           pageSize,
           search,
+          +stageId,
         );
         orders = data;
         totalOrders = total;

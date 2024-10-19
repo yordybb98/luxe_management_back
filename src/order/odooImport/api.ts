@@ -87,6 +87,7 @@ const getAllOddoOrders = async (
   page: number = 1,
   limit: number = 5,
   search: string = '',
+  stageId?: number,
 ): Promise<{ data: Order[]; total: number }> => {
   const offset = (page - 1) * limit;
   const searchDomain = search
@@ -97,6 +98,9 @@ const getAllOddoOrders = async (
       ]
     : [];
 
+  const stageDomain = stageId ? [['stage_id', '=', stageId]] : [];
+  const combinedDomain = [...stageDomain, ...searchDomain];
+
   const orders = (await new Promise((resolve, reject) => {
     modelsClient.methodCall(
       'execute_kw',
@@ -106,7 +110,7 @@ const getAllOddoOrders = async (
         password,
         'crm.lead',
         'search_read',
-        [searchDomain],
+        [combinedDomain],
         { offset, limit, order: 'create_date DESC' },
       ],
       (err, data) => {
@@ -122,7 +126,7 @@ const getAllOddoOrders = async (
   const totalOrders = (await new Promise((resolve, reject) => {
     modelsClient.methodCall(
       'execute_kw',
-      [db, uid, password, 'crm.lead', 'search_count', [searchDomain]],
+      [db, uid, password, 'crm.lead', 'search_count', [combinedDomain]],
       (err, data) => {
         if (err) {
           reject(err);
@@ -262,6 +266,7 @@ const searchOdooOrder = async (
   page: number = 1,
   limit: number = 5,
   search: string = '',
+  stageId?: number,
 ): Promise<{ data: any[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
@@ -273,11 +278,16 @@ const searchOdooOrder = async (
         ]
       : [];
 
+    const stageDomain = stageId ? [['stage_id', '=', stageId]] : [];
+
     // Combine the search key and comparison operator with the search domain
-    const domain =
-      searchKey && comparisonOperator && searchValue
-        ? [[searchKey, comparisonOperator, searchValue], ...searchDomain]
-        : searchDomain;
+    const combinedDomain = [
+      ...(searchKey && comparisonOperator && searchValue
+        ? [[searchKey, comparisonOperator, searchValue]]
+        : []),
+      ...searchDomain,
+      ...stageDomain,
+    ];
 
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
@@ -288,7 +298,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_read', // Method (search_read)
-          [domain], // Dynamic domain filter
+          [combinedDomain], // Dynamic domain filter
           { offset, limit }, // Dynamic fields
         ],
         (err, orders) => {
@@ -310,7 +320,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_count', // Method (search_read)
-          [domain], // Dynamic domain filter
+          [combinedDomain], // Dynamic domain filter
         ],
         (err, orders) => {
           if (err) {
