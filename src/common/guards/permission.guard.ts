@@ -24,11 +24,18 @@ export class PermissionGuard implements CanActivate {
 
     const { user } = context.switchToHttp().getRequest();
 
-    const authorized = requiredPermission.some((permission) =>
-      user.role.permissions.includes(permission),
+    const missingPermissions = requiredPermission.filter(
+      (permission) => !user.role.permissions.includes(permission),
     );
 
-    if (!authorized) {
+    if (missingPermissions.length > 0) {
+      const request = context.switchToHttp().getRequest();
+      const url = request.url; // Get the request URL
+
+      console.error('User permissions:', user.role.permissions);
+      console.error(`Unauthorized access to URL: ${url}`);
+      console.error('Missing permissions:', missingPermissions); // Log the missing permissions
+
       throw new ForbiddenException(
         'You do not have enough access to perform this action.',
       );

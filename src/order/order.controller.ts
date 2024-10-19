@@ -79,6 +79,18 @@ export class OrderController {
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
+    // Filtering orders based on designerId param
+    if (designerId)
+      combinedDomain.push(['x_studio_designers_assigned', 'ilike', designerId]);
+
+    // Filtering orders based on technicianId param
+    if (technicianId)
+      combinedDomain.push([
+        'x_studio_technicians_assigned',
+        'ilike',
+        technicianId,
+      ]);
+
     let orders = [];
     let totalOrders = 0;
 
@@ -91,22 +103,6 @@ export class OrderController {
       Permission.ViewAllOrders,
     );
     if (canViewAllOrders) {
-      // Filtering orders based on designerId param
-      if (designerId)
-        combinedDomain.push([
-          'x_studio_designers_assigned',
-          'ilike',
-          designerId,
-        ]);
-
-      // Filtering orders based on technicianId param
-      if (technicianId)
-        combinedDomain.push([
-          'x_studio_technicians_assigned',
-          'ilike',
-          designerId,
-        ]);
-
       const { data, total } = await searchOdooOrder(
         UID,
         combinedDomain,
