@@ -1,6 +1,8 @@
 import { Order } from 'src/common/types/order';
+import { OdooOrder } from '../entities/order.entity';
+import { Stage } from 'src/common/types/stage';
 
-function normalizeOrder(item: any): Order {
+function normalizeOrder(item: OdooOrder): Order {
   // Mapping input odoo object to Order type
   const id = item.id;
   const name = item.name as string;
@@ -11,10 +13,10 @@ function normalizeOrder(item: any): Order {
   const stage = {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
-  };
-  const companyName = item.partner_id[1] || '';
+  } as Stage;
+  const companyName = (item.partner_id[1] as string) || '';
   const email = item.email_from || '';
-  const phone = item.phone || '';
+  const phone = item.phone_sanitized || '';
   const mobile = item.mobile || '';
   const address = item.street || '';
   const website = item.website || '';

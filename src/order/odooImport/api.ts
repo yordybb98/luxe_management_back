@@ -1,4 +1,4 @@
-import { Order } from '../entities/order.entity';
+import { OdooOrder, Order } from '../entities/order.entity';
 
 const xmlrpc = require('xmlrpc');
 const fs = require('fs');
@@ -88,7 +88,7 @@ const getAllOddoOrders = async (
   limit: number = 5,
   search: string = '',
   stageId?: number,
-): Promise<{ data: Order[]; total: number }> => {
+): Promise<{ data: OdooOrder[]; total: number }> => {
   const offset = (page - 1) * limit;
   const searchDomain = search
     ? [
@@ -121,7 +121,7 @@ const getAllOddoOrders = async (
         }
       },
     );
-  })) as Order[];
+  })) as OdooOrder[];
 
   const totalOrders = (await new Promise((resolve, reject) => {
     modelsClient.methodCall(
@@ -260,34 +260,12 @@ const updateOdooOrder = async (
 
 const searchOdooOrder = async (
   uid,
-  searchKey,
-  comparisonOperator,
-  searchValue,
+  dynamicDomain: any[] = [],
   page: number = 1,
   limit: number = 5,
-  search: string = '',
-  stageId?: number,
 ): Promise<{ data: any[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
-    const searchDomain = search
-      ? [
-          '|', // Start OR condition
-          ['name', 'ilike', search],
-          ['x_studio_order_description', 'ilike', search],
-        ]
-      : [];
-
-    const stageDomain = stageId ? [['stage_id', '=', stageId]] : [];
-
-    // Combine the search key and comparison operator with the search domain
-    const combinedDomain = [
-      ...(searchKey && comparisonOperator && searchValue
-        ? [[searchKey, comparisonOperator, searchValue]]
-        : []),
-      ...searchDomain,
-      ...stageDomain,
-    ];
 
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
@@ -298,7 +276,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_read', // Method (search_read)
-          [combinedDomain], // Dynamic domain filter
+          [dynamicDomain], // Dynamic domain filter
           { offset, limit }, // Dynamic fields
         ],
         (err, orders) => {
@@ -320,7 +298,7 @@ const searchOdooOrder = async (
           password, // Password
           'crm.lead', // Model
           'search_count', // Method (search_read)
-          [combinedDomain], // Dynamic domain filter
+          [dynamicDomain], // Dynamic domain filter
         ],
         (err, orders) => {
           if (err) {
