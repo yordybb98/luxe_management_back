@@ -157,8 +157,9 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
   }
 };
 
-const getOdooStages = async (uid) => {
+const getOdooStages = async (uid: number, team_id?: number) => {
   try {
+    const filterDomain = team_id ? [[['team_id', '=', team_id]]] : [];
     const stages = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -168,7 +169,7 @@ const getOdooStages = async (uid) => {
           password,
           'crm.stage',
           'search_read',
-          [],
+          filterDomain,
           { fields: ['name'] },
         ],
         (err, stages) => {
@@ -183,6 +184,36 @@ const getOdooStages = async (uid) => {
     return stages;
   } catch (err) {
     console.error('Error getting Odoo stages:', err);
+    return [];
+  }
+};
+
+const getOdooTeams = async (uid) => {
+  try {
+    const teams = await new Promise((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db,
+          uid,
+          password,
+          'crm.team',
+          'search_read',
+          [],
+          { fields: ['name'] },
+        ],
+        (err, stages) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(stages);
+          }
+        },
+      );
+    });
+    return teams;
+  } catch (err) {
+    console.error('Error getting Odoo teams:', err);
     return [];
   }
 };
@@ -333,4 +364,5 @@ export {
   searchOdooOrder,
   getAllOddoOrders,
   countAllOdooOrders,
+  getOdooTeams,
 };

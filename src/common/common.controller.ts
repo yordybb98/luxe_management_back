@@ -1,5 +1,9 @@
-import { Controller, Get, Request } from '@nestjs/common';
-import { authenticateFromOdoo, getOdooStages } from 'src/order/odooImport/api';
+import { Controller, Get, Query, Request } from '@nestjs/common';
+import {
+  authenticateFromOdoo,
+  getOdooStages,
+  getOdooTeams,
+} from 'src/order/odooImport/api';
 import { Stage } from './types/stage';
 
 @Controller('')
@@ -7,20 +11,18 @@ export class CommonController {
   constructor() {}
 
   @Get('stages')
-  async getStages(@Request() req) {
+  async getStages(@Request() req, @Query('team_id') team_id) {
     const uid = await authenticateFromOdoo();
-    const stages = await getOdooStages(uid);
+    const stages = (await getOdooStages(uid, +team_id)) as Stage[];
 
-    const uniqueStages = [];
+    return stages;
+  }
 
-    const seenNames = new Set();
-    for (const stage of stages as Stage[]) {
-      if (!seenNames.has(stage.name)) {
-        seenNames.add(stage.name);
-        uniqueStages.push(stage);
-      }
-    }
+  @Get('teams')
+  async getTeams(@Request() req) {
+    const uid = await authenticateFromOdoo();
+    const teams = await getOdooTeams(uid);
 
-    return uniqueStages;
+    return teams;
   }
 }
