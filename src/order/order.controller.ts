@@ -20,7 +20,6 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import {
   authenticateFromOdoo,
-  getAllOddoOrders,
   getOdooOrderById,
   searchOdooOrder,
   updateOdooOrder,
@@ -58,6 +57,7 @@ export class OrderController {
     @Query('search') search,
     @Query('designerId') designerId,
     @Query('technicianId') technicianId,
+    @Query('order') order,
   ): Promise<GetAllOrdersResponseDto> {
     const token = req.headers.authorization?.split(' ')[1];
     //deserializando token
@@ -108,6 +108,7 @@ export class OrderController {
         combinedDomain,
         page,
         pageSize,
+        order,
       );
 
       orders = data;

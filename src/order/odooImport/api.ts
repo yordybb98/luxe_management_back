@@ -263,6 +263,7 @@ const searchOdooOrder = async (
   dynamicDomain: any[] = [],
   page: number = 1,
   limit: number = 5,
+  order: string = 'create_date DESC',
 ): Promise<{ data: any[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
@@ -277,7 +278,7 @@ const searchOdooOrder = async (
           'crm.lead', // Model
           'search_read', // Method (search_read)
           [dynamicDomain], // Dynamic domain filter
-          { offset, limit }, // Dynamic fields
+          { offset, limit, order }, // Dynamic fields
         ],
         (err, orders) => {
           if (err) {
