@@ -144,4 +144,5 @@ export type OdooOrder = {
   x_studio_tasks: string; // Assuming this is a JSON string
   x_studio_directory: string;
   x_studio_technicians_assigned: string; // Assuming this is a JSON string
+  x_studio_designer_date_assignment: string; // Consider using Date type
 };

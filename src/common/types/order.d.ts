@@ -21,4 +21,5 @@ export type Order = {
   tasks?: Task[];
   directory: string;
   created_at: Date;
+  designerAssigmentDate: Date;
 };

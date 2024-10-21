@@ -264,7 +264,7 @@ const searchOdooOrder = async (
   page: number = 1,
   limit: number = 5,
   order: string = 'create_date DESC',
-): Promise<{ data: any[]; total: number }> => {
+): Promise<{ data: OdooOrder[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
 
@@ -288,7 +288,7 @@ const searchOdooOrder = async (
           }
         },
       );
-    })) as Order[];
+    })) as OdooOrder[];
 
     const total = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(

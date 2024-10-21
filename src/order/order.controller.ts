@@ -470,6 +470,16 @@ export class OrderController {
         parsedDesignerAssignedIds,
       );
 
+      //Assignation Date
+      const assigmentDate = new Date();
+      const parsedAssigmentDate = JSON.stringify(assigmentDate);
+      await updateOdooOrder(
+        uid,
+        data.orderId,
+        'x_studio_designer_date_assignment',
+        parsedAssigmentDate,
+      );
+
       //Adding commentx
       data.comment &&
         (await updateOdooOrder(
