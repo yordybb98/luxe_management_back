@@ -362,11 +362,27 @@ export class OrderController {
           updetedTechiniciansAssignedIds,
         );
       }
+
+      //Removing previous technician assignment
+      const updatedTechniciansAssigned =
+        normalizedOrder.techniciansAssignedId.filter(
+          (technicianId) => technicianId !== taskFound.technicianId,
+        );
+
+      //Adding new technician assignment
+      updatedTechniciansAssigned.push(technicianId);
+
+      const setted = new Set(updatedTechniciansAssigned);
+
+      //Changing technician assignment
+      await updateOdooOrder(UID, +orderId, 'x_studio_technicians_assigned', [
+        ...setted,
+      ]);
     }
     //Stringify task
     const stringifiedUpdatedTasks = JSON.stringify(updatedTasks);
 
-    //Updating task in Odoo
+    //Updating tasks in Odoo
     await updateOdooOrder(
       UID,
       +orderId,
