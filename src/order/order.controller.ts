@@ -24,7 +24,11 @@ import {
   searchOdooOrder,
   updateOdooOrder,
 } from './odooImport/api';
-import { AssignDesignerDto, AssignUserDto } from './dto/assign-order.dto';
+import {
+  AssignDesignerDto,
+  AssignUserDto,
+  EditDesignerAssigmentDto,
+} from './dto/assign-order.dto';
 import { JwtService } from '@nestjs/jwt';
 import { jwtConstants } from 'src/auth/constants';
 import { Order } from 'src/common/types/order';
@@ -219,11 +223,15 @@ export class OrderController {
       );
     }
 
-    const orderWithUser = (
+    const ordersWithTechnicians = (
       await this.orderService.getOrdersWithTechnicians([normalizedOrder])
     )[0];
 
-    return { order: orderFound, normalizedOrder: orderWithUser };
+    const ordersWithDesigners = (
+      await this.orderService.getOrdersWithDesigners([ordersWithTechnicians])
+    )[0];
+
+    return { order: orderFound, normalizedOrder: ordersWithDesigners };
   }
 
   @Post(':id/finish')
@@ -524,6 +532,53 @@ export class OrderController {
           'x_studio_comment',
           data.comment,
         ));
+    } catch (err) {
+      console.error({ err });
+      throw new NotFoundException("Order doesn't exist");
+    }
+  }
+
+  @Post('updateDesigners')
+  @Permissions(Permission.AssignDesigner)
+  async updateDessignerAssigment(
+    @Request() req,
+    @Body() data: EditDesignerAssigmentDto,
+  ) {
+    try {
+      //checking if order exists
+      const order = await this.getOrderById(data.orderId.toString(), req);
+      if (!order) throw new BadRequestException('Order not found');
+
+      //checking if all user exists
+      const usersExists = data.designerIds.map(async (designerId) => {
+        const user = await this.usersService.getUserById(designerId);
+        if (!user) throw new BadRequestException('Designer not found');
+
+        return user;
+      });
+      if (!usersExists)
+        throw new BadRequestException('One or more designers not found');
+
+      //Authenticating Odoo
+      const uid = await authenticateFromOdoo();
+
+      //Replacing designers assigned
+      await updateOdooOrder(
+        uid,
+        data.orderId,
+        'x_studio_designers_assigned',
+        JSON.stringify(data.designerIds),
+      );
+      /* data.designerIds.forEach(async (designerId) => {
+        try{
+
+          await this.assignDesigner(req, { orderId: data.orderId, designerId })
+        }
+        catch (err) {
+          console.error({ err });
+          throw new Error('Failed to assign designer');
+        }
+      }) */
     } catch (err) {
       console.error({ err });
       throw new NotFoundException("Order doesn't exist");

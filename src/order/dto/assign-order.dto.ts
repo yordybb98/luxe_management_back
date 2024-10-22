@@ -1,4 +1,4 @@
-import { IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class AssignUserDto {
   @IsString()
@@ -20,4 +20,13 @@ export class AssignDesignerDto {
 
   @IsOptional()
   comment?: string;
+}
+
+export class EditDesignerAssigmentDto {
+  @IsArray()
+  @IsNumber({}, { each: true })
+  designerIds: number[];
+
+  @IsNumber()
+  orderId: number;
 }
