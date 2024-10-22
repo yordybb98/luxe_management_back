@@ -124,11 +124,17 @@ export class OrderController {
     } else {
       if (userRoleName === 'designer') {
         // Filtering orders based on designerRole
-        combinedDomain.push([
-          'x_studio_designers_assigned',
-          'ilike',
-          payload.sub,
-        ]);
+
+        //Searching the exact value to avoid partial matches like 1 or 10 or 111
+        combinedDomain.push(
+          '|', // OR logic
+          ['x_studio_designers_assigned', '=', `[${payload.sub}]`], // Exact match for a single value
+          '|', // Additional OR logic
+          ['x_studio_designers_assigned', 'like', `[${payload.sub},%`], // Check if starts with [9,
+          '|',
+          ['x_studio_designers_assigned', 'like', `,%${payload.sub},%`], // Check for middle occurrences
+          ['x_studio_designers_assigned', 'like', `,%${payload.sub}]`], // Check if ends with ,9]);
+        );
 
         const { data, total } = await searchOdooOrder(
           UID,
@@ -139,12 +145,18 @@ export class OrderController {
         orders = data;
         totalOrders = total;
       } else if (userRoleName === 'technician') {
-        // Filtering orders based on technicianRole
-        combinedDomain.push([
-          'x_studio_technicians_assigned',
-          'ilike',
-          payload.sub,
-        ]);
+        //Filtering orders based on technician Role
+
+        //Searching the exact value to avoid partial matches like 1 or 10 or 111
+        combinedDomain.push(
+          '|', // OR logic
+          ['x_studio_technicians_assigned', '=', `[${payload.sub}]`], // Exact match for a single value
+          '|', // Additional OR logic
+          ['x_studio_technicians_assigned', 'like', `[${payload.sub},%`], // Check if starts with [9,
+          '|',
+          ['x_studio_technicians_assigned', 'like', `,%${payload.sub},%`], // Check for middle occurrences
+          ['x_studio_technicians_assigned', 'like', `,%${payload.sub}]`], // Check if ends with ,9]);
+        );
 
         const { data, total } = await searchOdooOrder(
           UID,
