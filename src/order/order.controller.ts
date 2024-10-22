@@ -69,12 +69,20 @@ export class OrderController {
     const combinedDomain = [];
 
     // Filtering orders based on search param
-    if (search)
+    if (search) {
+      // Searching by phone
+      combinedDomain.push('|', ['phone_sanitized', 'ilike', search]);
+
+      // Searching by client name
+      combinedDomain.push('|', ['partner_id', 'ilike', search]);
+
+      // Searching by name or description
       combinedDomain.push(
         '|',
         ['name', 'ilike', search],
         ['x_studio_order_description', 'ilike', search],
       );
+    }
 
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
