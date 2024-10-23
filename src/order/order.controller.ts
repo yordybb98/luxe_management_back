@@ -490,8 +490,8 @@ export class OrderController {
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
 
-      //Changing order status to Propousal
-      await updateOdooOrder(uid, data.orderId, 'stage_id', 9);
+      //Changing order status to Design
+      await updateOdooOrder(uid, data.orderId, 'stage_id', 27);
 
       //Getting previous designers assigned
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
@@ -582,6 +582,27 @@ export class OrderController {
     } catch (err) {
       console.error({ err });
       throw new NotFoundException("Order doesn't exist");
+    }
+  }
+
+  @Post(':id/uploadProposal')
+  @Permissions(Permission.UploadProposal)
+  async uploadProposal(@Request() req, @Param('id') orderId: string) {
+    try {
+      const order = await this.getOrderById(orderId, req);
+
+      if (!order) {
+        throw new NotFoundException('Order not found');
+      }
+
+      //Authenticating Odoo
+      const uid = await authenticateFromOdoo();
+
+      //Changing order status to Proposal
+      await updateOdooOrder(uid, +orderId, 'stage_id', 9);
+    } catch (err) {
+      console.error({ err });
+      throw new NotFoundException(err);
     }
   }
 

@@ -26,6 +26,7 @@ enum Permission {
   FinishTasks
   EditTasks
   CancelTasks
+  UploadProposal
 
   // ViewProjects
   // CreateProjects
