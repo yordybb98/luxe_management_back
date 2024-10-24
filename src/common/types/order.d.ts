@@ -22,4 +22,7 @@ export type Order = {
   directory: string;
   created_at: Date;
   designerAssigmentDate: Date;
+  firstAdjustment?: string;
+  secondAdjustment?: string;
+  finalAdjustment?: string;
 };

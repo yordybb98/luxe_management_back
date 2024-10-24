@@ -591,8 +591,29 @@ export class OrderController {
     try {
       const order = await this.getOrderById(orderId, req);
 
+      //checking if order exists
       if (!order) {
         throw new NotFoundException('Order not found');
+      }
+
+      //checking if order is in a stage where a proposal can be uploaded
+      const stagesIdAllowed = [
+        27, //Design
+        28, //First Adjustment
+        29, //Second Adjustment
+        30, //Final Adjustment
+      ];
+      if (!stagesIdAllowed.includes(+order.normalizedOrder.stage.id)) {
+        throw new BadRequestException(
+          'Order is not in a stage where a proposal can be uploaded',
+        );
+      }
+
+      //checking if order already reached the maximum number of proposals
+      if (order.normalizedOrder.finalAdjustment) {
+        throw new BadRequestException(
+          'Order already reached the maximum number of proposals',
+        );
       }
 
       //Authenticating Odoo

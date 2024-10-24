@@ -27,10 +27,13 @@ function normalizeOrder(item: OdooOrder): Order {
   const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : [];
   const directory = item.x_studio_directory || '';
   const created_at = item.create_date ? new Date(item.create_date) : null;
-
   const designerAssigmentDate = item.x_studio_designer_date_assignment
     ? new Date(JSON.parse(item.x_studio_designer_date_assignment))
     : null;
+  const firstAdjustment = item.x_studio_first_adjustment_description || '';
+  const secondAdjustment = item.x_studio_second_adjustment_description || '';
+  const finalAdjustment = item.x_studio_final_adjustment_description || '';
+
   return {
     id,
     name,
@@ -49,6 +52,9 @@ function normalizeOrder(item: OdooOrder): Order {
     directory,
     created_at,
     designerAssigmentDate,
+    firstAdjustment,
+    secondAdjustment,
+    finalAdjustment,
   };
 }
 

@@ -145,4 +145,10 @@ export type OdooOrder = {
   x_studio_directory: string;
   x_studio_technicians_assigned: string; // Assuming this is a JSON string
   x_studio_designer_date_assignment: string; // Consider using Date type
+  x_studio_first_adjustment_check: boolean | false;
+  x_studio_first_adjustment_description: string | false;
+  x_studio_second_adjustment_check: boolean | false;
+  x_studio_second_adjustment_description: string | false;
+  x_studio_final_adjustment_check: boolean | false;
+  x_studio_final_adjustment_description: string | false;
 };
