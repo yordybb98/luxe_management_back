@@ -126,6 +126,7 @@ export class OrderController {
       orders = data;
       totalOrders = total;
     } else {
+      combinedDomain.push(['stage_id', '!=', 13]);
       if (userRoleName === 'designer') {
         // Filtering orders based on designerRole
 
