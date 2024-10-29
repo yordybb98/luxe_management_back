@@ -1,14 +1,6 @@
-import { OdooOrder, Order } from '../entities/order.entity';
+import { OdooOrder } from '../entities/order.entity';
 
 const xmlrpc = require('xmlrpc');
-const fs = require('fs');
-
-const yordabb = {
-  url: 'https://yordanbb.odoo.com',
-  db: 'yordanbb',
-  username: 'yordanbb98@gmail.com',
-  password: '12345678',
-};
 
 // Configura tus credenciales aquí
 const url = 'https://luxe-graphics.odoo.com';
