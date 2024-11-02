@@ -11,6 +11,8 @@ import {
   Patch,
   Query,
   Request,
+  UseInterceptors,
+  UploadedFiles,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
@@ -40,6 +42,8 @@ import { Task } from 'src/common/types/tasks';
 import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
 import { Permission } from '@prisma/client';
 import { EditTaskDto } from './dto/edit-task.dto';
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { ImageService } from 'src/images/images.service';
 const path = require('path');
 
 @ApiTags('order')
@@ -49,6 +53,7 @@ export class OrderController {
     private readonly orderService: OrderService,
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
+    private readonly imageService: ImageService,
   ) {}
 
   @Get()
@@ -587,8 +592,13 @@ export class OrderController {
   }
 
   @Post(':id/uploadProposal')
+  @UseInterceptors(FilesInterceptor('files'))
   @Permissions(Permission.UploadProposal)
-  async uploadProposal(@Request() req, @Param('id') orderId: string) {
+  async uploadProposal(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Request() req,
+    @Param('id') orderId: string,
+  ) {
     try {
       const order = await this.getOrderById(orderId, req);
 
@@ -616,6 +626,21 @@ export class OrderController {
           'Order already reached the maximum number of proposals',
         );
       }
+
+      console.log({ files });
+
+      //Saving original and resizedWaterMark images
+      const filePaths = await Promise.all(
+        files.map((file) =>
+          this.imageService.resizeAndSaveImage(
+            file,
+            order.normalizedOrder.directory,
+          ),
+        ),
+      );
+
+      //Paths where were saved
+      console.log({ filePaths });
 
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();

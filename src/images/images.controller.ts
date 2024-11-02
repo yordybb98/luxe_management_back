@@ -3,42 +3,51 @@
 import {
   Controller,
   Post,
-  UploadedFile,
   UseInterceptors,
-  Query,
   Body,
-  Get,
-  Param,
-  Res,
+  UploadedFiles,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './images.service';
-import { Response } from 'express';
 
 @Controller('images')
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  async uploadAndResizeImage(@UploadedFile() file: any, @Body() data) {
-    const filePath = await this.imageService.resizeAndSaveImage(
-      file,
-      data.path,
-    );
-
-    console.log({ filePath });
-    return { filePath }; //  Return the path for confirmation
-  }
-
-  @Get(':id/:filename')
-  async getImage(
-    @Param('id') id: string,
-    @Param('filename') filename: string,
-    @Res() res: Response,
+  @UseInterceptors(FilesInterceptor('files'))
+  async uploadAndResizeImage(
+    @UploadedFiles() files: Express.Multer.File[],
+    @Body() data,
   ) {
-    const imageStream = this.imageService.getImageStream(id, filename);
-    res.set('Content-Type', 'image/jpeg');
-    imageStream.pipe(res);
+    const filePaths = await Promise.all(
+      files.map((file) =>
+        this.imageService.resizeAndSaveImage(file, data.path),
+      ),
+    );
+    return { filePaths }; //  Return the path for confirmation
   }
+
+  //   @Post('preview')
+  //   async getImage(@Body() data, @Res() res: Response) {
+  //     console.log(data);
+  //     console.log('GETTING IMAGE API');
+  //     const outputDir = join(
+  //       settings.BASE_ROOT_DIRECTORY,
+  //       '..',
+  //       'uploads',
+  //       data.path,
+  //     );
+  //     const imageStream = await this.imageService.getImageStream(data.path);
+
+  //     const url = join(outputDir, imageStream[0]);
+
+  //     console.log({ url });
+  //     console.log({ outputDir });
+  //     console.log({ imageStream });
+
+  //     return res.sendFile(url);
+  //     /* res.set('Content-Type', 'image/jpeg');
+  //     imageStream.pipe(res); */
+  //   }
 }
