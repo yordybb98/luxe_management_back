@@ -48,6 +48,7 @@ import { Permission } from '@prisma/client';
 import { EditTaskDto } from './dto/edit-task.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from 'src/images/images.service';
+import { AuthService } from 'src/auth/auth.service';
 const path = require('path');
 
 @ApiTags('order')
@@ -58,6 +59,7 @@ export class OrderController {
     private readonly usersService: UserService,
     private readonly jwtService: JwtService,
     private readonly imageService: ImageService,
+    private readonly authService: AuthService,
   ) {}
 
   @Get()
@@ -676,7 +678,12 @@ export class OrderController {
       const uid = await authenticateFromOdoo();
 
       //Changing order status to Production
-      await updateOdooOrder(uid, data.orderId, 'stage_id', 10);
+      await updateOdooOrder(
+        uid,
+        data.orderId,
+        'stage_id',
+        STAGES_IDS.PRODUCTION,
+      );
 
       //Getting previous technicians assigned
       const order = await this.getOrderById(data.orderId.toString(), req);
@@ -703,10 +710,15 @@ export class OrderController {
       const tasks = (await this.getOrderById(data.orderId.toString(), req))
         .normalizedOrder.tasks;
 
+      const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
       //Creating new task
       const newTask: Task = {
         id: randomUUID(),
         technicianId: data.technicianId,
+        assignedBy: userLoggedIn.sub,
+        parentTasksIds: [],
+        isActive: true,
         dateAssigned: new Date(),
         instructions: data.instructions,
         status: 'IN-PROGRESS',
