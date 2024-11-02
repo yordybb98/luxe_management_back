@@ -8,6 +8,9 @@ import { SignInResponseDto, SignUpResponseDto } from './dto/signInDto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { RoleService } from 'src/role/role.service';
+import { PayloadToken } from 'src/common/types/payload';
+import { Request } from 'express';
+import { jwtConstants } from './constants';
 
 @Injectable()
 export class AuthService {
@@ -34,11 +37,10 @@ export class AuthService {
     const { password, id, ...result } = user;
 
     //contructing token data
-    const payload = {
+    const payload: PayloadToken = {
       sub: user.id,
       email: user.email,
       role: user.role,
-      orders: user.orders,
     };
 
     //signing token
@@ -93,5 +95,15 @@ export class AuthService {
       return false;
       // throw new UnauthorizedException('Invalid token');
     }
+  }
+
+  async getUserLoggedIn(req: Request): Promise<PayloadToken> {
+    const token = req.headers.authorization?.split(' ')[1];
+    //deserializando token
+    const payload = await this.jwtService.verifyAsync(token, {
+      secret: jwtConstants.secret,
+    });
+
+    return payload;
   }
 }

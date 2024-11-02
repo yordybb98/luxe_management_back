@@ -5,10 +5,19 @@ import { PrismaModule } from 'src/prisma/prisma.module';
 import { UserService } from 'src/user/user.service';
 import { JwtService } from '@nestjs/jwt';
 import { ImageService } from 'src/images/images.service';
+import { AuthService } from 'src/auth/auth.service';
+import { RoleService } from 'src/role/role.service';
 
 @Module({
   controllers: [OrderController],
-  providers: [OrderService, UserService, JwtService, ImageService],
+  providers: [
+    OrderService,
+    UserService,
+    JwtService,
+    ImageService,
+    AuthService,
+    RoleService,
+  ],
   imports: [PrismaModule],
 })
 export class OrderModule {}
