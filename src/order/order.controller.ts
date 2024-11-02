@@ -37,7 +37,11 @@ import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
 import { createFolders, sanitizePathName } from 'src/utils/utils';
-import { settings } from 'settings.config';
+import {
+  settings,
+  STAGES_IDS,
+  STAGESIDSALLOWEDTODOAPROPOSAL,
+} from 'settings.config';
 import { Task } from 'src/common/types/tasks';
 import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
 import { Permission } from '@prisma/client';
@@ -600,21 +604,20 @@ export class OrderController {
     @Param('id') orderId: string,
   ) {
     try {
+      console.log('-------------------');
+      console.log('UPLOADING PROPOSAL');
       const order = await this.getOrderById(orderId, req);
 
       //checking if order exists
       if (!order) {
+        console.warn(`Order with id: ${orderId} not found`);
         throw new NotFoundException('Order not found');
       }
 
       //checking if order is in a stage where a proposal can be uploaded
-      const stagesIdAllowed = [
-        27, //Design
-        28, //First Adjustment
-        29, //Second Adjustment
-        30, //Final Adjustment
-      ];
-      if (!stagesIdAllowed.includes(+order.normalizedOrder.stage.id)) {
+      if (
+        !STAGESIDSALLOWEDTODOAPROPOSAL.includes(+order.normalizedOrder.stage.id)
+      ) {
         throw new BadRequestException(
           'Order is not in a stage where a proposal can be uploaded',
         );
@@ -622,12 +625,13 @@ export class OrderController {
 
       //checking if order already reached the maximum number of proposals
       if (order.normalizedOrder.finalAdjustment) {
+        console.warn(
+          `Order with id: ${orderId} already reached the maximum number of proposals`,
+        );
         throw new BadRequestException(
-          'Order already reached the maximum number of proposals',
+          `Order with id: ${orderId} already reached the maximum number of proposals`,
         );
       }
-
-      console.log({ files });
 
       //Saving original and resizedWaterMark images
       const filePaths = await Promise.all(
@@ -639,14 +643,18 @@ export class OrderController {
         ),
       );
 
-      //Paths where were saved
-      console.log({ filePaths });
+      console.log(`Proposal uploaded sucessfully to`, { filePaths });
 
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
 
       //Changing order status to Proposal
-      await updateOdooOrder(uid, +orderId, 'stage_id', 9);
+      await updateOdooOrder(uid, +orderId, 'stage_id', STAGES_IDS.PROPOSITION);
+
+      console.log(`Order with id ${orderId} was moved to Proposal`);
+
+      console.log('UPLOADING PROPOSAL FINISHED');
+      console.log('----------------------------');
     } catch (err) {
       console.error({ err });
       throw new NotFoundException(err);
