@@ -626,14 +626,14 @@ export class OrderController {
       }
 
       //checking if order already reached the maximum number of proposals
-      if (order.normalizedOrder.finalAdjustment) {
+      /* if (order.normalizedOrder.finalAdjustment) {
         console.warn(
           `Order with id: ${orderId} already reached the maximum number of proposals`,
         );
         throw new BadRequestException(
           `Order with id: ${orderId} already reached the maximum number of proposals`,
         );
-      }
+      } */
 
       //Saving original and resizedWaterMark images
       const filePaths = await Promise.all(
