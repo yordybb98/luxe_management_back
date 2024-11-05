@@ -28,6 +28,7 @@ import {
 } from './odooImport/api';
 import {
   AssignDesignerDto,
+  AssignSubtaskDto,
   AssignUserDto,
   EditDesignerAssigmentDto,
 } from './dto/assign-order.dto';
@@ -268,7 +269,7 @@ export class OrderController {
     const tasks = normalizedOrder.normalizedOrder.tasks;
     for (const task of tasks) {
       if (task.status === 'IN-PROGRESS') {
-        await this.finishTask(id, task.id);
+        await this.finishTask(req, id, task.id);
       }
     }
 
@@ -279,9 +280,10 @@ export class OrderController {
   @Post(':orderId/finishTask/:taskId')
   @Permissions(Permission.FinishTasks)
   async finishTask(
+    @Request() req,
     @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
-  ): Promise<Task> {
+  ): Promise<Task[]> {
     const UID = await authenticateFromOdoo();
 
     //Founding order
@@ -290,7 +292,7 @@ export class OrderController {
 
     //Founding task
     const normalizedOrder = normalizeOrder(orderFound[0]);
-    const tasks = normalizedOrder.tasks;
+    let tasks = normalizedOrder.tasks;
     const taskFound = tasks.find((task) => task.id === taskId);
     if (!taskFound) throw new NotFoundException('Task not found');
 
@@ -299,18 +301,54 @@ export class OrderController {
     //Defining task finished date
     taskFound.dateFinished = new Date();
 
+    // Update isActive property for dependent tasks
+    for (const task of tasks) {
+      if (
+        task.previousTasks &&
+        task.previousTasks.some((prev) => prev === taskId) // Ensure to check the id property
+      ) {
+        task.isActive = true;
+        task.status = 'IN-PROGRESS';
+
+        // Assign task to technician
+        const userAssignedIds = normalizedOrder.techniciansAssignedId;
+
+        // Removing duplicates
+        const uniqueUserAssignedIds = new Set(userAssignedIds);
+
+        // Adding new user
+        uniqueUserAssignedIds.add(task.technicianId);
+
+        // Convert Set back to Array
+        const parsedUserAssignedIds = [...uniqueUserAssignedIds];
+
+        // Updating local order
+        normalizedOrder.techniciansAssignedId = parsedUserAssignedIds;
+
+        // Assigning user in Odoo
+        await updateOdooOrder(
+          UID,
+          +orderId,
+          'x_studio_technicians_assigned',
+          parsedUserAssignedIds, // Send array directly, no need to stringify
+        );
+      }
+    }
+
     //Removing technician assignment from task if there is not any other uncompleted task assigned to the same designer
     if (taskFound.technicianId) {
       const technicianId = taskFound.technicianId;
       const uncompletedTasks = tasks.filter(
         (task) =>
-          task.status !== 'COMPLETED' && task.technicianId === technicianId,
+          task.status === 'IN-PROGRESS' &&
+          task.technicianId === technicianId &&
+          task.isActive,
       );
 
       if (uncompletedTasks.length === 0) {
         //Getting previous techinicians assigned
         const techiniciansAssignedIds = normalizedOrder.techniciansAssignedId;
-        const updetedTechiniciansAssignedIds = techiniciansAssignedIds.filter(
+        const updatedTechiniciansAssignedIds = techiniciansAssignedIds.filter(
           (id) => id !== taskFound.technicianId,
         );
         //Removing user assignment from order
@@ -318,7 +356,7 @@ export class OrderController {
           UID,
           +orderId,
           'x_studio_technicians_assigned',
-          updetedTechiniciansAssignedIds,
+          updatedTechiniciansAssignedIds,
         );
       }
     }
@@ -329,7 +367,12 @@ export class OrderController {
     //Updating task
     await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
 
-    return taskFound;
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (userLoggedIn.role.name.toLocaleLowerCase() === 'technician') {
+      tasks = tasks.filter((task) => task.technicianId === userLoggedIn.sub);
+    }
+    return tasks;
   }
 
   @Patch(':orderId/editTask/:taskId')
@@ -715,12 +758,13 @@ export class OrderController {
       //Creating new task
       const newTask: Task = {
         id: randomUUID(),
+        instructions: data.instructions,
         technicianId: data.technicianId,
         assignedBy: userLoggedIn.sub,
-        parentTasksIds: [],
+        previousTasks: [],
+        nextTasks: [],
         isActive: true,
         dateAssigned: new Date(),
-        instructions: data.instructions,
         status: 'IN-PROGRESS',
       };
 
@@ -734,6 +778,99 @@ export class OrderController {
       await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', parsedTasks);
 
       return newTask;
+    } catch (err) {
+      console.error({ err });
+      throw new NotFoundException(err);
+    }
+  }
+
+  @Post('assignSubtask')
+  @Permissions(Permission.AssignTechnician)
+  async assignSubtask(
+    @Request() req,
+    @Body() data: AssignSubtaskDto,
+  ): Promise<Task[]> {
+    try {
+      //checking if user exists
+      const user = await this.usersService.getUserById(data.technicianId);
+      if (!user) throw new BadRequestException('Technician not found');
+
+      //Authenticating Odoo
+      const uid = await authenticateFromOdoo();
+
+      const order = await this.getOrderById(data.orderId.toString(), req);
+
+      //Checking if order is in production stage
+      if (order.normalizedOrder.stage.id != STAGES_IDS.PRODUCTION) {
+        //Changing order status to Production
+        await updateOdooOrder(
+          uid,
+          data.orderId,
+          'stage_id',
+          STAGES_IDS.PRODUCTION,
+        );
+      }
+
+      //Getting previous tasks
+      let tasks = order.normalizedOrder.tasks;
+
+      const previousTask = tasks.find((task) => task.id === data.parentTaskId);
+
+      const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+      //Creating new SubTask
+      const newSubtask: Task = {
+        id: randomUUID(),
+        technicianId: data.technicianId,
+        assignedBy: userLoggedIn.sub,
+        previousTasks: [previousTask.id],
+        nextTasks: [],
+        isActive: previousTask.status === 'COMPLETED',
+        dateAssigned: new Date(),
+        instructions: data.instructions,
+        status: previousTask.status === 'COMPLETED' ? 'IN-PROGRESS' : 'ON HOLD',
+      };
+
+      //If subtask is active it will be assigned to a technician
+      if (newSubtask.isActive) {
+        const userAssignedIds = order.normalizedOrder.techniciansAssignedId;
+
+        //Removing duplicates
+        const uniqueUserAssignedIds = new Set(userAssignedIds);
+
+        //Adding new user
+        uniqueUserAssignedIds.add(data.technicianId);
+
+        //Stringify users as array
+        const parsedUserAssignedIds = JSON.stringify([
+          ...uniqueUserAssignedIds,
+        ]);
+
+        //Assigning user in odoo
+        await updateOdooOrder(
+          uid,
+          data.orderId,
+          'x_studio_technicians_assigned',
+          parsedUserAssignedIds,
+        );
+      }
+
+      //Adding new task to previous tasks
+      tasks.push(newSubtask);
+
+      previousTask.nextTasks.push(newSubtask.id);
+
+      tasks = tasks.map((task) => {
+        return task.id === previousTask.id ? previousTask : task;
+      });
+
+      //Stringify tasks
+      const parsedTasks = JSON.stringify(tasks);
+
+      //Updating odoo tasks
+      await updateOdooOrder(uid, data.orderId, 'x_studio_tasks', parsedTasks);
+
+      return tasks;
     } catch (err) {
       console.error({ err });
       throw new NotFoundException(err);

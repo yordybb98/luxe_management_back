@@ -30,3 +30,17 @@ export class EditDesignerAssigmentDto {
   @IsNumber()
   orderId: number;
 }
+
+export class AssignSubtaskDto {
+  @IsString()
+  instructions: string;
+
+  @IsNumber()
+  technicianId: number;
+
+  @IsNumber()
+  orderId: number;
+
+  @IsString()
+  parentTaskId: string;
+}
