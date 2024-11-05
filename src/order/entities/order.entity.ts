@@ -88,7 +88,7 @@ export type OdooOrder = {
   title: boolean | false;
   email_from: string;
   email_domain_criterion: string;
-  phone: boolean | false;
+  phone: string | false;
   mobile: string;
   phone_state: boolean | false;
   email_state: string;
