@@ -1,6 +1,6 @@
 import { IsArray, IsNumber, IsOptional, IsString } from 'class-validator';
 
-export class AssignUserDto {
+export class AssignTaskDto {
   @IsString()
   instructions: string;
 
@@ -9,6 +9,9 @@ export class AssignUserDto {
 
   @IsNumber()
   orderId: number;
+
+  @IsString()
+  name: string;
 }
 
 export class AssignDesignerDto {
@@ -37,6 +40,9 @@ export class AssignSubtaskDto {
 
   @IsNumber()
   technicianId: number;
+
+  @IsString()
+  name: string;
 
   @IsNumber()
   orderId: number;

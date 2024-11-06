@@ -5,10 +5,12 @@ export type Task = {
   assignedBy?: number;
   technicianId: number;
   dateAssigned: Date;
-  previousTasks?: string[];
-  nextTasks?: string[];
+  previousTasks?: TaskSummary[];
+  nextTasks?: TaskSummary[];
   isActive: boolean;
   updatedAt?: Date;
   dateFinished?: Date;
   status: 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
 };
+
+type TaskSummary = Pick<Task, 'id' | 'name' | 'status'>;

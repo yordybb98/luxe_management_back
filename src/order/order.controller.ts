@@ -29,7 +29,7 @@ import {
 import {
   AssignDesignerDto,
   AssignSubtaskDto,
-  AssignUserDto,
+  AssignTaskDto,
   EditDesignerAssigmentDto,
 } from './dto/assign-order.dto';
 import { JwtService } from '@nestjs/jwt';
@@ -305,7 +305,7 @@ export class OrderController {
     for (const task of tasks) {
       if (
         task.previousTasks &&
-        task.previousTasks.some((prev) => prev === taskId) // Ensure to check the id property
+        task.previousTasks.some((prev) => prev.id === taskId) // Ensure to check the id property
       ) {
         task.isActive = true;
         task.status = 'IN-PROGRESS';
@@ -710,7 +710,7 @@ export class OrderController {
   @Permissions(Permission.AssignTechnician)
   async assignTechnician(
     @Request() req,
-    @Body() data: AssignUserDto,
+    @Body() data: AssignTaskDto,
   ): Promise<Task> {
     try {
       //checking if user exists
@@ -758,6 +758,7 @@ export class OrderController {
       //Creating new task
       const newTask: Task = {
         id: randomUUID(),
+        name: data.name,
         instructions: data.instructions,
         technicianId: data.technicianId,
         assignedBy: userLoggedIn.sub,
@@ -821,9 +822,16 @@ export class OrderController {
       //Creating new SubTask
       const newSubtask: Task = {
         id: randomUUID(),
+        name: data.name,
         technicianId: data.technicianId,
         assignedBy: userLoggedIn.sub,
-        previousTasks: [previousTask.id],
+        previousTasks: [
+          {
+            id: previousTask.id,
+            name: previousTask.name,
+            status: previousTask.status,
+          },
+        ],
         nextTasks: [],
         isActive: previousTask.status === 'COMPLETED',
         dateAssigned: new Date(),
@@ -858,7 +866,7 @@ export class OrderController {
       //Adding new task to previous tasks
       tasks.push(newSubtask);
 
-      previousTask.nextTasks.push(newSubtask.id);
+      previousTask.nextTasks.push(newSubtask);
 
       tasks = tasks.map((task) => {
         return task.id === previousTask.id ? previousTask : task;
