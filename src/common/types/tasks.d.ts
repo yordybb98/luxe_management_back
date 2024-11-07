@@ -13,4 +13,4 @@ export type Task = {
   status: 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
 };
 
-type TaskSummary = Pick<Task, 'id' | 'name' | 'status'>;
+type TaskSummary = Pick<Task, 'id' | 'name' | 'status' | 'instructions'>;

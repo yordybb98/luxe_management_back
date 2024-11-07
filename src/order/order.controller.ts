@@ -830,6 +830,7 @@ export class OrderController {
             id: previousTask.id,
             name: previousTask.name,
             status: previousTask.status,
+            instructions: previousTask.instructions,
           },
         ],
         nextTasks: [],
