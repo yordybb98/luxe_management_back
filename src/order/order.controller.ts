@@ -50,6 +50,7 @@ import { EditTaskDto } from './dto/edit-task.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
+import { join } from 'path';
 const path = require('path');
 
 @ApiTags('order')
@@ -644,7 +645,8 @@ export class OrderController {
   @UseInterceptors(FilesInterceptor('files'))
   @Permissions(Permission.UploadProposal)
   async uploadProposal(
-    @UploadedFiles() files: Express.Multer.File[],
+    /* 
+    @UploadedFiles() files: Express.Multer.File[], */
     @Request() req,
     @Param('id') orderId: string,
   ) {
@@ -652,6 +654,9 @@ export class OrderController {
       console.log('-------------------');
       console.log('UPLOADING PROPOSAL');
       const order = await this.getOrderById(orderId, req);
+
+      const finalArtPath = join(order.normalizedOrder.directory, 'Arte Final');
+      const files = await this.imageService.getImagesFromFolder(finalArtPath);
 
       //checking if order exists
       if (!order) {
