@@ -193,7 +193,8 @@ export class OrderController {
     if (userRoleName === 'technician') {
       normalizedOrders.forEach((order) => {
         order.tasks = order.tasks.filter(
-          (task) => task.technicianId === payload.sub,
+          (task) =>
+            task.technicianId === payload.sub && task.status !== 'ON HOLD',
         );
       });
     }
@@ -233,7 +234,8 @@ export class OrderController {
     //extracting tasks that are not assigned to the current user (only if user is a technician)
     if (userRoleName === 'technician') {
       normalizedOrder.tasks = normalizedOrder.tasks.filter(
-        (task) => task.technicianId === payload.sub,
+        (task) =>
+          task.technicianId === payload.sub && task.status !== 'ON HOLD',
       );
     }
 
