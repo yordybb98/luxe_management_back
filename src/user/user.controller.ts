@@ -21,6 +21,7 @@ import { RoleService } from 'src/role/role.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
 import { ROLES_IDS } from 'settings.config';
+import { ChangePasswordDto } from './dto/changePasswordDto';
 
 @ApiTags('user')
 @Controller('users')
@@ -131,6 +132,25 @@ export class UserController {
     try {
       return await this.userService.updateUser(Number(id), data);
     } catch (err) {
+      throw new NotFoundException("User doesn't exist");
+    }
+  }
+
+  @Patch(':id/password')
+  @Permissions(Permission.UpdateUsers)
+  async changePassword(
+    @Param('id') id: string,
+    @Body() data: ChangePasswordDto,
+  ): Promise<boolean> {
+    try {
+      //hashing password
+      const hashedNewPassword = await bcrypt.hash(data.newPassword, 10);
+
+      //Changing password
+      await this.userService.changePassword(Number(id), hashedNewPassword);
+      return true;
+    } catch (err) {
+      console.error(err);
       throw new NotFoundException("User doesn't exist");
     }
   }
