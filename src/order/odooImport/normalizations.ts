@@ -1,5 +1,4 @@
-import { Order } from 'src/common/types/order';
-import { OdooOrder } from '../entities/order.entity';
+import { OdooOrder, Order } from 'src/common/types/order';
 import { Stage } from 'src/common/types/stage';
 
 function normalizeOrder(item: OdooOrder): Order {

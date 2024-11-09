@@ -1,4 +1,4 @@
-import { OdooOrder } from '../entities/order.entity';
+import { OdooOrder } from 'src/common/types/order';
 
 const xmlrpc = require('xmlrpc');
 
