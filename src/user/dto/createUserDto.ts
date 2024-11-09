@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsString,
   MinLength,
+  ValidateIf,
 } from 'class-validator';
 
 export class CreateUserDto {
@@ -13,13 +14,21 @@ export class CreateUserDto {
   @MinLength(1)
   name: string;
 
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value.toString().trim())
+  lastName: string;
+
   @IsString()
   @Transform(({ value }) => value.toString().trim())
   @MinLength(1)
   username: string;
 
-  @IsEmail()
   @IsOptional()
+  @ValidateIf(
+    (obj) => obj.email !== undefined && obj.email !== null && obj.email !== '',
+  )
+  @IsEmail({}, { message: 'Must be a valid email' })
   email: string;
 
   @IsString()
@@ -30,9 +39,17 @@ export class CreateUserDto {
   @IsNumber()
   roleId: number;
 
-  @IsNumber()
   @IsOptional()
-  departmentId: number;
+  @ValidateIf(
+    (obj) => obj.phone !== undefined && obj.phone !== null && obj.phone !== '',
+  )
+  @IsString()
+  @Transform(({ value }) => value.toString().trim())
+  @MinLength(10, { message: 'Phone number must be at least 10 characters' })
+  phone: string;
 
-  orders: number[];
+  @IsOptional()
+  @IsString()
+  @Transform(({ value }) => value.toString().trim())
+  address: string;
 }

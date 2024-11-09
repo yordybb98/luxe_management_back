@@ -53,15 +53,18 @@ export class UserService {
           name: data.name,
           username: data.username,
           email: data.email,
-          password: data.password,
+          password: data.password /* 
           ...(data.departmentId && {
             department: {
               connect: { id: data.departmentId },
             },
-          }),
+          }), */,
           role: {
             connect: { id: data.roleId },
           },
+          phone: data.phone,
+          lastName: data.lastName,
+          address: data.address,
         },
         include: {
           role: true,

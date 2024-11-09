@@ -53,7 +53,9 @@ export class AuthService {
     name: string,
     email: string,
     roleId: number,
-    departmentId: number,
+    phone: string,
+    lastName: string,
+    address: string,
   ): Promise<SignUpResponseDto> {
     const role = await this.roleService.getRoleById(roleId);
     if (!role) {
@@ -72,18 +74,19 @@ export class AuthService {
       name,
       email,
       roleId,
-      departmentId,
-      orders: [],
+      phone,
+      lastName,
+      address,
     });
     return {
       username,
       name,
       email,
       roleId,
-      departmentId,
-      orders: [],
-      projects: [],
       permissions: [],
+      phone,
+      lastName,
+      address,
     };
   }
 

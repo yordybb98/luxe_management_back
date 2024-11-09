@@ -50,7 +50,16 @@ export class AuthController {
   @Post('signUp')
   signUp(
     @Body()
-    { username, password, name, email, roleId, departmentId }: SignUpDto,
+    {
+      username,
+      password,
+      name,
+      email,
+      roleId,
+      phone,
+      lastName,
+      address,
+    }: SignUpDto,
   ) {
     return this.authService.signUp(
       username,
@@ -58,7 +67,9 @@ export class AuthController {
       name,
       email,
       roleId,
-      departmentId,
+      phone,
+      lastName,
+      address,
     );
   }
 
