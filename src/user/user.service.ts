@@ -52,7 +52,7 @@ export class UserService {
         data: {
           name: data.name,
           username: data.username,
-          email: data.email,
+          email: data.email || null,
           password: data.password /* 
           ...(data.departmentId && {
             department: {
