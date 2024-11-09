@@ -41,3 +41,9 @@ export const STAGESIDSALLOWEDTODOAPROPOSAL = [
   STAGES_IDS.ADJUSTMENT_2, //Second Adjustment
   STAGES_IDS.ADJUSTMENT_FINAL, //Final Adjustment
 ];
+
+export const ROLES_IDS = {
+  ADMIN: 1,
+  DESIGNER: 2,
+  TECHNICIAN: 3,
+};

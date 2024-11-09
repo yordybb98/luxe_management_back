@@ -39,6 +39,7 @@ import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
 import { createFolders, sanitizePathName } from 'src/utils/utils';
 import {
+  ROLES_IDS,
   settings,
   STAGES_IDS,
   STAGESIDSALLOWEDTODOAPROPOSAL,
@@ -123,7 +124,7 @@ export class OrderController {
     const UID = await authenticateFromOdoo();
 
     //Getting orders from odoo based on user role
-    const userRoleName = (payload.role.name as string).toLocaleLowerCase();
+    const userRoleID = payload.role.id;
     const canViewAllOrders = payload.role.permissions.includes(
       Permission.ViewAllOrders,
     );
@@ -140,7 +141,7 @@ export class OrderController {
       totalOrders = total;
     } else {
       combinedDomain.push(['stage_id', '!=', STAGES_IDS.ON_HOLD]);
-      if (userRoleName === 'designer') {
+      if (userRoleID === ROLES_IDS.DESIGNER) {
         // Filtering orders based on designerRole
 
         //Searching the exact value to avoid partial matches like 1 or 10 or 111
@@ -163,7 +164,7 @@ export class OrderController {
         );
         orders = data;
         totalOrders = total;
-      } else if (userRoleName === 'technician') {
+      } else if (userRoleID === ROLES_IDS.TECHNICIAN) {
         //Filtering orders based on technician Role
 
         //Searching the exact value to avoid partial matches like 1 or 10 or 111
@@ -191,7 +192,7 @@ export class OrderController {
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userRoleName === 'technician') {
+    if (userRoleID === ROLES_IDS.TECHNICIAN) {
       normalizedOrders.forEach((order) => {
         order.tasks = order.tasks.filter(
           (task) =>
@@ -224,7 +225,7 @@ export class OrderController {
     const payload = await this.jwtService.verifyAsync(token, {
       secret: jwtConstants.secret,
     });
-    const userRoleName = (payload.role.name as string).toLocaleLowerCase();
+    const userRoleID = payload.role.id;
 
     //checking if order exists
     if (!orderFound) throw new NotFoundException('Order not found');
@@ -233,7 +234,7 @@ export class OrderController {
     const normalizedOrder = normalizeOrder(orderFound[0]);
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userRoleName === 'technician') {
+    if (userRoleID === ROLES_IDS.TECHNICIAN) {
       normalizedOrder.tasks = normalizedOrder.tasks.filter(
         (task) =>
           task.technicianId === payload.sub && task.status !== 'ON HOLD',
@@ -373,7 +374,7 @@ export class OrderController {
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userLoggedIn.role.name.toLocaleLowerCase() === 'technician') {
+    if (userLoggedIn.role.id === ROLES_IDS.TECHNICIAN) {
       tasks = tasks.filter((task) => task.technicianId === userLoggedIn.sub);
     }
     return tasks;

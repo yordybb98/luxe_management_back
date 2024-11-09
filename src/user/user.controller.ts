@@ -18,9 +18,9 @@ import { PublicUserData } from './dto/publicUserData';
 import { ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
-import { Request } from 'express';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
+import { ROLES_IDS } from 'settings.config';
 
 @ApiTags('user')
 @Controller('users')
@@ -48,7 +48,7 @@ export class UserController {
     const publicUsersData = users.map(({ password, ...rest }) => rest);
 
     const technicians = publicUsersData.filter(
-      (user) => user.role.name.toLocaleLowerCase() === 'technician',
+      (user) => user.role.id === ROLES_IDS.TECHNICIAN,
     );
 
     return technicians;
@@ -63,7 +63,7 @@ export class UserController {
     const publicUsersData = users.map(({ password, ...rest }) => rest);
 
     const designers = publicUsersData.filter(
-      (user) => user.role.name.toLocaleLowerCase() === 'designer',
+      (user) => user.role.id === ROLES_IDS.DESIGNER,
     );
 
     return designers;
