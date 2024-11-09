@@ -12,7 +12,6 @@ import {
   Query,
   Request,
   UseInterceptors,
-  UploadedFiles,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
@@ -77,12 +76,7 @@ export class OrderController {
     @Query('technicianId') technicianId,
     @Query('order') order,
   ): Promise<GetAllOrdersResponseDto> {
-    const token = req.headers.authorization?.split(' ')[1];
-    //deserializando token
-    const payload = await this.jwtService.verifyAsync(token, {
-      secret: jwtConstants.secret,
-    });
-
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //Creating combined domain to filter orders
     const combinedDomain = [];
 
@@ -124,8 +118,8 @@ export class OrderController {
     const UID = await authenticateFromOdoo();
 
     //Getting orders from odoo based on user role
-    const userRoleID = payload.role.id;
-    const canViewAllOrders = payload.role.permissions.includes(
+    const userRoleID = userLoggedIn.role.id;
+    const canViewAllOrders = userLoggedIn.role.permissions.includes(
       Permission.ViewAllOrders,
     );
     if (canViewAllOrders) {
@@ -147,12 +141,12 @@ export class OrderController {
         //Searching the exact value to avoid partial matches like 1 or 10 or 111
         combinedDomain.push(
           '|', // OR logic
-          ['x_studio_designers_assigned', '=', `[${payload.sub}]`], // Exact match for a single value
+          ['x_studio_designers_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
           '|', // Additional OR logic
-          ['x_studio_designers_assigned', 'like', `[${payload.sub},%`], // Check if starts with [9,
+          ['x_studio_designers_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
           '|',
-          ['x_studio_designers_assigned', 'like', `,%${payload.sub},%`], // Check for middle occurrences
-          ['x_studio_designers_assigned', 'like', `,%${payload.sub}]`], // Check if ends with ,9]);
+          ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+          ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
         );
 
         const { data, total } = await searchOdooOrder(
@@ -170,12 +164,12 @@ export class OrderController {
         //Searching the exact value to avoid partial matches like 1 or 10 or 111
         combinedDomain.push(
           '|', // OR logic
-          ['x_studio_technicians_assigned', '=', `[${payload.sub}]`], // Exact match for a single value
+          ['x_studio_technicians_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
           '|', // Additional OR logic
-          ['x_studio_technicians_assigned', 'like', `[${payload.sub},%`], // Check if starts with [9,
+          ['x_studio_technicians_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
           '|',
-          ['x_studio_technicians_assigned', 'like', `,%${payload.sub},%`], // Check for middle occurrences
-          ['x_studio_technicians_assigned', 'like', `,%${payload.sub}]`], // Check if ends with ,9]);
+          ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+          ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
         );
 
         const { data, total } = await searchOdooOrder(
@@ -196,7 +190,7 @@ export class OrderController {
       normalizedOrders.forEach((order) => {
         order.tasks = order.tasks.filter(
           (task) =>
-            task.technicianId === payload.sub && task.status !== 'ON HOLD',
+            task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
         );
       });
     }
@@ -220,12 +214,8 @@ export class OrderController {
     const UID = await authenticateFromOdoo();
     const orderFound = await getOdooOrderById(UID, +id);
 
-    const token = req.headers.authorization?.split(' ')[1];
-    //deserializando token
-    const payload = await this.jwtService.verifyAsync(token, {
-      secret: jwtConstants.secret,
-    });
-    const userRoleID = payload.role.id;
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+    const userRoleID = userLoggedIn.role.id;
 
     //checking if order exists
     if (!orderFound) throw new NotFoundException('Order not found');
@@ -237,7 +227,7 @@ export class OrderController {
     if (userRoleID === ROLES_IDS.TECHNICIAN) {
       normalizedOrder.tasks = normalizedOrder.tasks.filter(
         (task) =>
-          task.technicianId === payload.sub && task.status !== 'ON HOLD',
+          task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
       );
     }
 
