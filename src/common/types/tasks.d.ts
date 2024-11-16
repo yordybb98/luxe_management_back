@@ -10,7 +10,9 @@ export type Task = {
   isActive: boolean;
   updatedAt?: Date;
   dateFinished?: Date;
-  status: 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
+  status: TaskStatus;
 };
+
+export type TaskStatus = 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
 
 type TaskSummary = Pick<Task, 'id' | 'name' | 'status' | 'instructions'>;

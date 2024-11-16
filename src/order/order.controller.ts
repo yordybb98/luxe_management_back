@@ -51,6 +51,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { join } from 'path';
+import { QueryParamsDto } from './dto/queryParamsDto';
 const path = require('path');
 
 @ApiTags('order')
@@ -203,6 +204,83 @@ export class OrderController {
     );
 
     return { data: ordersWithDesigners, total: totalOrders };
+  }
+
+  @Get('tasks')
+  @Permissions(Permission.ViewTasks)
+  async getTechnicianTasks(@Request() req, @Query() query?: QueryParamsDto) {
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+    const orders = await this.getAllOrders(
+      req,
+      1,
+      10,
+      null,
+      null,
+      null,
+      userLoggedIn.sub,
+      null,
+    );
+
+    const allTasks = orders.data.flatMap((order) => {
+      return order.tasks;
+    });
+
+    if (!query?.status) {
+      return allTasks;
+    }
+
+    const filteredTasks = allTasks.filter(
+      (task) => task.status === query.status,
+    );
+    return filteredTasks;
+  }
+
+  @Get('tasks/:id')
+  @Permissions(Permission.ViewTasks)
+  async getTaskById(@Request() req, @Param('id') id: string) {
+    console.log('GETTING TASK BY ID');
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+    const UID = await authenticateFromOdoo();
+
+    //Filtering orders based on technician Role
+    const combinedDomain = [
+      '|', // OR logic
+      ['x_studio_technicians_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
+      '|', // Additional OR logic
+      ['x_studio_technicians_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
+      '|',
+      ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+      ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+    ];
+
+    //Filtering tasks based on task id
+    combinedDomain.push(['x_studio_tasks', 'ilike', `"id":"${id}"`]);
+
+    //Order with the wanted task
+    const { data, total } = await searchOdooOrder(UID, combinedDomain);
+
+    if (!data) throw new NotFoundException('Order not found with this task');
+
+    const order = normalizeOrder(data[0]);
+
+    const ordersWithDesigners = (
+      await this.orderService.getOrdersWithDesigners([order])
+    )[0];
+
+    //Searching the exact task
+    const task = ordersWithDesigners.tasks.find((task) => task.id === id);
+
+    if (!task) throw new NotFoundException('Task not found');
+
+    return {
+      task,
+      designer: ordersWithDesigners.designersAssigned,
+      directory: ordersWithDesigners.directory,
+      orderId: ordersWithDesigners.id,
+      client: ordersWithDesigners.companyName,
+    };
   }
 
   @Get(':id')
