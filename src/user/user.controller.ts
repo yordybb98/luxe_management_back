@@ -8,6 +8,7 @@ import {
   Param,
   Patch,
   Post,
+  Request,
   UseGuards,
 } from '@nestjs/common';
 import { UserService } from './user.service';
@@ -38,7 +39,6 @@ export class UserController {
   async getAllUsers(): Promise<UserResponseDto[]> {
     const users = await this.userService.getAllUsers();
 
-    this.notificationService.notifyUser(1, 'test');
     //removing sensitive data
     const publicUsersData = users.map(({ password, ...rest }) => rest);
     return publicUsersData;
@@ -85,7 +85,10 @@ export class UserController {
 
   @Post()
   @Permissions(Permission.CreateUsers)
-  async createUser(@Body() data: CreateUserDto): Promise<PublicUserData> {
+  async createUser(
+    @Body() data: CreateUserDto,
+    @Request() req,
+  ): Promise<PublicUserData> {
     //checking if email was provided
     if (data.email) {
       //checking if email already exists
@@ -127,6 +130,11 @@ export class UserController {
     //removing sensitive data from response
     const { password, ...rest } = await this.userService.createUser(data);
 
+    this.notificationService.notifyUser(req.user.sub, {
+      message: `User ${data.name} created successfully`,
+      type: 'success',
+    });
+
     return rest;
   }
 
@@ -161,10 +169,18 @@ export class UserController {
 
   @Delete(':id')
   @Permissions(Permission.DeleteUsers)
-  async deleteUser(@Param('id') id: string): Promise<PublicUserData> {
+  async deleteUser(
+    @Param('id') id: string,
+    @Request() req,
+  ): Promise<PublicUserData> {
     try {
       const userDeleted = await this.userService.deleteUser(Number(id));
       const { id: userId, password, ...rest } = userDeleted;
+
+      this.notificationService.notifyUser(req.user.sub, {
+        message: `User ${userDeleted.name} deleted successfully`,
+        type: 'success',
+      });
       return rest;
     } catch (err) {
       throw new NotFoundException("User doesn't exist");

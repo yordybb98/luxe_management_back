@@ -7,6 +7,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { RoleService } from 'src/role/role.service';
+import { NotificationModule } from 'src/notification/notification.module';
 
 @Module({
   controllers: [OrderController],
@@ -18,6 +19,6 @@ import { RoleService } from 'src/role/role.service';
     AuthService,
     RoleService,
   ],
-  imports: [PrismaModule],
+  imports: [PrismaModule, NotificationModule],
 })
 export class OrderModule {}

@@ -51,6 +51,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { join } from 'path';
+import { NotificationService } from 'src/notification/notification.service';
 const path = require('path');
 
 @ApiTags('order')
@@ -62,6 +63,7 @@ export class OrderController {
     private readonly jwtService: JwtService,
     private readonly imageService: ImageService,
     private readonly authService: AuthService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @Get()
@@ -268,6 +270,13 @@ export class OrderController {
       }
     }
 
+    //Notifying admin
+    //TODO INSTEAD OF USER 1 IT SHOULD BE ALL THE ADMINS
+    this.notificationService.notifyUser(1, {
+      type: 'success',
+      message: `${req.user.email} finished order ${normalizedOrder.normalizedOrder.name} of client ${normalizedOrder.normalizedOrder.companyName}`,
+    });
+
     //Changing order status
     await updateOdooOrder(UID, +id, 'stage_id', 5);
   }
@@ -286,7 +295,11 @@ export class OrderController {
     if (!orderFound) throw new NotFoundException('Order not found');
 
     //Founding task
-    const normalizedOrder = normalizeOrder(orderFound[0]);
+    const normalizedOrder = (
+      await this.orderService.getOrdersWithDesigners([
+        normalizeOrder(orderFound[0]),
+      ])
+    )[0];
     let tasks = normalizedOrder.tasks;
     const taskFound = tasks.find((task) => task.id === taskId);
     if (!taskFound) throw new NotFoundException('Task not found');
@@ -314,6 +327,21 @@ export class OrderController {
         // Adding new user
         uniqueUserAssignedIds.add(task.technicianId);
 
+        //Notifying  technician
+        this.notificationService.notifyUser(task.technicianId, {
+          type: 'success',
+          message: `${normalizedOrder.designersAssigned[0].name} assigned you a task`,
+        });
+
+        //Notifying  designer
+        this.notificationService.notifyUser(
+          normalizedOrder.designersAssignedIds[0],
+          {
+            type: 'success',
+            message: `${task.name} of order ${normalizedOrder.name} was started automatically`,
+          },
+        );
+
         // Convert Set back to Array
         const parsedUserAssignedIds = [...uniqueUserAssignedIds];
 
@@ -330,7 +358,7 @@ export class OrderController {
       }
     }
 
-    //Removing technician assignment from task if there is not any other uncompleted task assigned to the same designer
+    //Removing technician assignment from task if there is not any other uncompleted task assigned to the same technician
     if (taskFound.technicianId) {
       const technicianId = taskFound.technicianId;
       const uncompletedTasks = tasks.filter(
@@ -356,11 +384,31 @@ export class OrderController {
       }
     }
 
+    //Notifying designer if all tasks are completed
+    if (tasks.every((task) => task.status === 'COMPLETED')) {
+      this.notificationService.notifyUser(
+        normalizedOrder.designersAssignedIds[0],
+        {
+          type: 'success',
+          message: `All tasks of order ${normalizedOrder.name} are completed`,
+        },
+      );
+    }
+
     //Stringify task
     const updatedTasks = JSON.stringify(tasks);
 
     //Updating task
     await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
+
+    //Notifying designer
+    this.notificationService.notifyUser(
+      normalizedOrder.designersAssignedIds[0],
+      {
+        type: 'success',
+        message: `Task ${taskFound.name} was finished by ${req.user.email}`,
+      },
+    );
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //extracting tasks that are not assigned to the current user (only if user is a technician)
@@ -376,6 +424,7 @@ export class OrderController {
     @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
     @Body() data: EditTaskDto,
+    @Request() req,
   ): Promise<Task> {
     const UID = await authenticateFromOdoo();
 
@@ -448,6 +497,21 @@ export class OrderController {
       stringifiedUpdatedTasks,
     );
 
+    //checking if the technician assigned was changed
+    if (data.technicianId && taskFound.technicianId !== data.technicianId) {
+      //Notifying Older technician
+      this.notificationService.notifyUser(taskFound.technicianId, {
+        type: 'success',
+        message: `${req.user.email} removed you from task: ${taskFound.name}`,
+      });
+    }
+
+    //Notifying new technician
+    this.notificationService.notifyUser(data.technicianId, {
+      type: 'success',
+      message: `${req.user.email} assigned you a new task: ${taskFound.name}`,
+    });
+
     return updatedTask;
   }
 
@@ -457,6 +521,7 @@ export class OrderController {
     @Param('orderId') orderId: string,
     @Param('taskId') taskId: string,
     @Body() data: EditTaskDto,
+    @Request() req,
   ): Promise<Task> {
     const UID = await authenticateFromOdoo();
 
@@ -509,6 +574,12 @@ export class OrderController {
       stringifiedUpdatedTasks,
     );
 
+    //Notifying  technician
+    this.notificationService.notifyUser(data.technicianId, {
+      type: 'success',
+      message: `${req.user.email} cancelled one of your tasks: ${taskFound.name}`,
+    });
+
     return taskFound;
   }
 
@@ -541,7 +612,7 @@ export class OrderController {
       const uid = await authenticateFromOdoo();
 
       //Changing order status to Design
-      await updateOdooOrder(uid, data.orderId, 'stage_id', 27);
+      await updateOdooOrder(uid, data.orderId, 'stage_id', STAGES_IDS.DESIGN);
 
       //Getting previous designers assigned
       const designerAssignedIds = order.normalizedOrder.designersAssignedIds;
@@ -582,6 +653,12 @@ export class OrderController {
           'x_studio_comment',
           data.comment,
         ));
+
+      //Notifying  designer
+      this.notificationService.notifyUser(data.designerId, {
+        type: 'success',
+        message: `${req.user.email} assigned you to an order: ${order.normalizedOrder.name}`,
+      });
     } catch (err) {
       console.error({ err });
       throw new NotFoundException("Order doesn't exist");
@@ -619,6 +696,10 @@ export class OrderController {
         'x_studio_designers_assigned',
         JSON.stringify(data.designerIds),
       );
+
+      //Notifying  designers
+      //TODO Notify all designers envolved
+
       /* data.designerIds.forEach(async (designerId) => {
         try{
 
@@ -695,6 +776,13 @@ export class OrderController {
       //Changing order status to Proposal
       await updateOdooOrder(uid, +orderId, 'stage_id', STAGES_IDS.PROPOSITION);
 
+      //Notifying  admin
+      //TODO INSTEAD OF ADMIN SHOULD BE THE PROJECT MANAGER
+      this.notificationService.notifyUser(1, {
+        type: 'success',
+        message: `${req.user.email} uploaded a proposal to order ${order.normalizedOrder.name} of client ${order.normalizedOrder.companyName}`,
+      });
+
       console.log(`Order with id ${orderId} was moved to Proposal`);
 
       console.log('UPLOADING PROPOSAL FINISHED');
@@ -770,6 +858,12 @@ export class OrderController {
 
       //Adding new task to previous tasks
       tasks.push(newTask);
+
+      //Notifying techinician
+      this.notificationService.notifyUser(data.technicianId, {
+        type: 'success',
+        message: `${req.user.email} assigned you a new task`,
+      });
 
       //Stringify tasks
       const parsedTasks = JSON.stringify(tasks);

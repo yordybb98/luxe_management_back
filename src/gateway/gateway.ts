@@ -24,7 +24,6 @@ export class NotificationGateway implements OnModuleInit {
     this.server.on('connection', async (socket: Socket) => {
       // Extract and validate the user ID from query parameters or headers
       const token = socket.handshake.headers['authorization'];
-      console.log({ token });
       if (!token) {
         console.log('No token provided');
         socket.disconnect(); // Reject connection if no userId
