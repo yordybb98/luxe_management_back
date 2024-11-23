@@ -654,8 +654,6 @@ export class OrderController {
           data.comment,
         ));
 
-      console.log(req.user);
-      console.log(req);
       //Notifying  designer
       this.notificationService.notifyUser(data.designerId, {
         type: 'success',
