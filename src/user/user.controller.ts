@@ -22,6 +22,7 @@ import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
 import { ROLES_IDS } from 'settings.config';
 import { ChangePasswordDto } from './dto/changePasswordDto';
+import { NotificationService } from 'src/notification/notification.service';
 
 @ApiTags('user')
 @Controller('users')
@@ -29,12 +30,15 @@ export class UserController {
   constructor(
     private readonly userService: UserService,
     private readonly roleService: RoleService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   @Get()
   @Permissions(Permission.ViewUsers)
   async getAllUsers(): Promise<UserResponseDto[]> {
     const users = await this.userService.getAllUsers();
+
+    this.notificationService.notifyUser(1, 'test');
     //removing sensitive data
     const publicUsersData = users.map(({ password, ...rest }) => rest);
     return publicUsersData;

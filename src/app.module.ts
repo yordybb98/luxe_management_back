@@ -5,6 +5,8 @@ import { AuthModule } from './auth/auth.module';
 import { RoleModule } from './role/role.module';
 import { CommonModule } from './common/common.module';
 import { ImageModule } from './images/image.module';
+import { GatewayModule } from './gateway/gateway.module';
+import { NotificationModule } from './notification/notification.module';
 @Module({
   imports: [
     OrderModule,
@@ -17,6 +19,8 @@ import { ImageModule } from './images/image.module';
     DepartmentModule,
     StatusModule, */,
     ImageModule,
+    GatewayModule,
+    NotificationModule,
   ],
   controllers: [],
   providers: [],
