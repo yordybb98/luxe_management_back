@@ -62,19 +62,20 @@ datasource db {
 }
 
 model User {
-  id       Int     @id @default(autoincrement())
-  name     String
-  lastName String?
-  username String  @unique
-  email    String? @unique
-  password String
-  orders   Int[]
+  id            Int            @id @default(autoincrement())
+  name          String
+  lastName      String?
+  username      String         @unique
+  email         String?        @unique
+  password      String
+  orders        Int[]
   // department   Department? @relation(fields: [departmentId], references: [id])
   // departmentId Int?
-  role     Role    @relation(fields: [roleId], references: [id])
-  roleId   Int
-  phone    String?
-  address  String?
+  role          Role           @relation(fields: [roleId], references: [id])
+  roleId        Int
+  phone         String?
+  address       String?
+  notifications Notification[]
 }
 
 // model Order {
@@ -134,4 +135,15 @@ model Role {
   description String
   permissions Permission[]
   users       User[]
+}
+
+model Notification {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  message   Json
+  timestamp DateTime @default(now())
+  delivered Boolean  @default(false)
+
+  // Define the relationship with the User model
+  user User @relation(fields: [userId], references: [id])
 }
