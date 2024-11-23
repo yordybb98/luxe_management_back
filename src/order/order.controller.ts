@@ -274,7 +274,7 @@ export class OrderController {
     //TODO INSTEAD OF USER 1 IT SHOULD BE ALL THE ADMINS
     this.notificationService.notifyUser(1, {
       type: 'success',
-      message: `${req.user.email} finished order ${normalizedOrder.normalizedOrder.name} of client ${normalizedOrder.normalizedOrder.companyName}`,
+      message: `${req.user.username} finished order "${normalizedOrder.normalizedOrder.name}" of client "${normalizedOrder.normalizedOrder.companyName}"`,
     });
 
     //Changing order status
@@ -338,7 +338,7 @@ export class OrderController {
           normalizedOrder.designersAssignedIds[0],
           {
             type: 'success',
-            message: `${task.name} of order ${normalizedOrder.name} was started automatically`,
+            message: `Task "${task.name}" of order "${normalizedOrder.name}" was started automatically `,
           },
         );
 
@@ -390,7 +390,7 @@ export class OrderController {
         normalizedOrder.designersAssignedIds[0],
         {
           type: 'success',
-          message: `All tasks of order ${normalizedOrder.name} are completed`,
+          message: `All tasks of order "${normalizedOrder.name}" are completed`,
         },
       );
     }
@@ -406,7 +406,7 @@ export class OrderController {
       normalizedOrder.designersAssignedIds[0],
       {
         type: 'success',
-        message: `Task ${taskFound.name} was finished by ${req.user.email}`,
+        message: `Task "${taskFound.name}" of order "${normalizedOrder.name}" was finished by ${req.user.username}`,
       },
     );
 
@@ -502,14 +502,14 @@ export class OrderController {
       //Notifying Older technician
       this.notificationService.notifyUser(taskFound.technicianId, {
         type: 'success',
-        message: `${req.user.email} removed you from task: ${taskFound.name}`,
+        message: `${req.user.username} removed you from task: "${taskFound.name}"`,
       });
     }
 
     //Notifying new technician
     this.notificationService.notifyUser(data.technicianId, {
       type: 'success',
-      message: `${req.user.email} assigned you a new task: ${taskFound.name}`,
+      message: `${req.user.username} assigned you a new task: "${taskFound.name}"`,
     });
 
     return updatedTask;
@@ -577,7 +577,7 @@ export class OrderController {
     //Notifying  technician
     this.notificationService.notifyUser(data.technicianId, {
       type: 'success',
-      message: `${req.user.email} cancelled one of your tasks: ${taskFound.name}`,
+      message: `${req.user.username} cancelled one of your tasks: "${taskFound.name}"`,
     });
 
     return taskFound;
@@ -654,10 +654,12 @@ export class OrderController {
           data.comment,
         ));
 
+      console.log(req.user);
+      console.log(req);
       //Notifying  designer
       this.notificationService.notifyUser(data.designerId, {
         type: 'success',
-        message: `${req.user.email} assigned you to an order: ${order.normalizedOrder.name}`,
+        message: `${req.user.username} assigned you an order: "${order.normalizedOrder.name}"`,
       });
     } catch (err) {
       console.error({ err });
@@ -780,7 +782,7 @@ export class OrderController {
       //TODO INSTEAD OF ADMIN SHOULD BE THE PROJECT MANAGER
       this.notificationService.notifyUser(1, {
         type: 'success',
-        message: `${req.user.email} uploaded a proposal to order ${order.normalizedOrder.name} of client ${order.normalizedOrder.companyName}`,
+        message: `${req.user.username} uploaded a proposal to order "${order.normalizedOrder.name}" of client "${order.normalizedOrder.companyName}"`,
       });
 
       console.log(`Order with id ${orderId} was moved to Proposal`);
@@ -862,7 +864,7 @@ export class OrderController {
       //Notifying techinician
       this.notificationService.notifyUser(data.technicianId, {
         type: 'success',
-        message: `${req.user.email} assigned you a new task`,
+        message: `${req.user.username} assigned you a new task`,
       });
 
       //Stringify tasks

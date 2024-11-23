@@ -39,6 +39,7 @@ export class AuthService {
     //contructing token data
     const payload: PayloadToken = {
       sub: user.id,
+      username: user.username,
       email: user.email,
       role: user.role,
     };
