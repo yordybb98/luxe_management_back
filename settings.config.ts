@@ -47,3 +47,5 @@ export const ROLES_IDS = {
   DESIGNER: 2,
   TECHNICIAN: 3,
 };
+
+export const SERVER_FRONTEND = 'http://192.168.0.155:4000'

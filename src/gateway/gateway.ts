@@ -1,15 +1,15 @@
 import { OnModuleInit } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { WebSocketGateway, WebSocketServer } from '@nestjs/websockets';
+import { SERVER_FRONTEND } from 'settings.config';
 
 import { Server, Socket } from 'socket.io';
 import { jwtConstants } from 'src/auth/constants';
 import { PayloadToken } from 'src/common/types/payload';
-import { PrismaService } from 'src/prisma/prisma.service';
 
 @WebSocketGateway({
   cors: {
-    origin: ['http://localhost:4000'],
+    origin: [SERVER_FRONTEND],
     methods: ['GET', 'POST'],
     credentials: true,
   },
