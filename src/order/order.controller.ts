@@ -81,6 +81,41 @@ export class OrderController {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //Creating combined domain to filter orders
     const combinedDomain = [];
+    // Filtering orders based on designerId param
+    if (designerId) {
+      if (designerId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_designers_assigned', '=', false], // Check for null/undefined
+          ['x_studio_designers_assigned', '=', []], // Check for an empty array
+          ['x_studio_designers_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push(
+          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
+        );
+      }
+    }
+
+    // Filtering orders based on technicianId param
+    if (technicianId) {
+      if (technicianId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_technicians_assigned', '=', false], // Check for null/undefined
+          ['x_studio_technicians_assigned', '=', []], // Check for an empty array
+          ['x_studio_technicians_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push([
+          'x_studio_technicians_assigned',
+          'ilike',
+          technicianId,
+        ]);
+      }
+    }
 
     // Filtering orders based on search param
     if (search) {
@@ -100,18 +135,6 @@ export class OrderController {
 
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
-
-    // Filtering orders based on designerId param
-    if (designerId)
-      combinedDomain.push(['x_studio_designers_assigned', 'ilike', designerId]);
-
-    // Filtering orders based on technicianId param
-    if (technicianId)
-      combinedDomain.push([
-        'x_studio_technicians_assigned',
-        'ilike',
-        technicianId,
-      ]);
 
     let orders = [];
     let totalOrders = 0;
