@@ -156,7 +156,7 @@ export class OrderController {
           combinedDomain,
           page,
           pageSize,
-          'x_studio_designers_assigned DESC',
+          'x_studio_designer_date_assignment DESC',
         );
         orders = data;
         totalOrders = total;
