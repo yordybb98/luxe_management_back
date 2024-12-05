@@ -330,7 +330,7 @@ export class OrderController {
         //Notifying  technician
         this.notificationService.notifyUser(task.technicianId, {
           type: 'success',
-          message: `${normalizedOrder.designersAssigned[0].name} assigned you a task`,
+          message: `${normalizedOrder.designersAssigned[0]?.name} assigned you a task`,
         });
 
         //Notifying  designer
