@@ -50,13 +50,26 @@ export class ImageService {
       .toBuffer();
 
     const watermarkBuffer = fs.readFileSync('src/assets/watermark.png');
+    const watermarkMetadata = await sharp(watermarkBuffer).metadata();
 
     // Resize the watermark
-    const watermark = await sharp(Buffer.from(watermarkBuffer))
+    let watermark = await sharp(Buffer.from(watermarkBuffer))
       .resize({
         width: Math.round(metadata.width * reductionFactor * 0.2),
       })
       .toBuffer();
+
+      // Ensure the watermark size is smaller than the resized image
+  const resizedImageMetadata = await sharp(resizedImageBuffer).metadata();
+  if (watermarkMetadata.width > resizedImageMetadata.width || watermarkMetadata.height > resizedImageMetadata.height) {
+    // Scale down the watermark if necessary
+    watermark = await sharp(Buffer.from(watermarkBuffer))
+      .resize({
+        width: Math.round(resizedImageMetadata.width * reductionFactor * 0.2),
+        height: Math.round(resizedImageMetadata.height * reductionFactor * 0.2),
+      })
+      .toBuffer();
+  }
 
     // Add the watermark
     const finalImageBuffer = await sharp(resizedImageBuffer)
