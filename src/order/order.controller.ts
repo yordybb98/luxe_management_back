@@ -295,8 +295,7 @@ export class OrderController {
     }
 
     //Notifying admin
-    //TODO INSTEAD OF USER 1 IT SHOULD BE ALL THE ADMINS
-    this.notificationService.notifyUser(1, {
+    this.notificationService.notifyAllAdmins({
       type: 'success',
       message: `${req.user.username} finished order "${normalizedOrder.normalizedOrder.name}" of client "${normalizedOrder.normalizedOrder.companyName}"`,
     });
@@ -807,10 +806,9 @@ export class OrderController {
       await updateOdooOrder(uid, +orderId, 'stage_id', STAGES_IDS.PROPOSITION);
 
       //Notifying  admin
-      //TODO INSTEAD OF ADMIN SHOULD BE THE PROJECT MANAGER
-      this.notificationService.notifyUser(1, {
+      this.notificationService.notifyAllAdmins({
         type: 'success',
-        message: `${req.user.username} uploaded a proposal to order "${order.normalizedOrder.name}" of client "${order.normalizedOrder.companyName}"`,
+        message: `${req.user.username} uploaded a proposal to order "${order.normalizedOrder?.name}" of client "${order.normalizedOrder.companyName}"`,
       });
 
       console.log(`Order with id ${orderId} was moved to Proposal`);
