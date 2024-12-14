@@ -70,6 +70,7 @@ export class NotificationService {
   async saveNotification(
     notification: Omit<Notification, 'id'>,
   ): Promise<Notification> {
+    if(!notification.userId) return;
     return await this.prismaService.notification.create({
       data: {
         userId: notification.userId,
