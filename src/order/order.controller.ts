@@ -135,6 +135,9 @@ export class OrderController {
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
+    //Filtering only Luxe Graphics orders
+    combinedDomain.push(['company_id', '=', 1]);
+
     let orders = [];
     let totalOrders = 0;
 
@@ -240,9 +243,8 @@ export class OrderController {
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     const userRoleID = userLoggedIn.role.id;
-
     //checking if order exists
-    if (!orderFound) throw new NotFoundException('Order not found');
+    if (!orderFound.length) throw new NotFoundException('Order not found');
 
     //mapping input odoo object to Order type
     const normalizedOrder = normalizeOrder(orderFound[0]);
