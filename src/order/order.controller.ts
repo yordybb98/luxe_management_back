@@ -32,11 +32,10 @@ import {
   EditDesignerAssigmentDto,
 } from './dto/assign-order.dto';
 import { JwtService } from '@nestjs/jwt';
-import { jwtConstants } from 'src/auth/constants';
 import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
-import { createFolders, sanitizePathName } from 'src/utils/utils';
+import { cancelTasks, createFolders, sanitizePathName } from 'src/utils/utils';
 import {
   ROLES_IDS,
   settings,
@@ -81,6 +80,41 @@ export class OrderController {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //Creating combined domain to filter orders
     const combinedDomain = [];
+    // Filtering orders based on designerId param
+    if (designerId) {
+      if (designerId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_designers_assigned', '=', false], // Check for null/undefined
+          ['x_studio_designers_assigned', '=', []], // Check for an empty array
+          ['x_studio_designers_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push(
+          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
+        );
+      }
+    }
+
+    // Filtering orders based on technicianId param
+    if (technicianId) {
+      if (technicianId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_technicians_assigned', '=', false], // Check for null/undefined
+          ['x_studio_technicians_assigned', '=', []], // Check for an empty array
+          ['x_studio_technicians_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push([
+          'x_studio_technicians_assigned',
+          'ilike',
+          technicianId,
+        ]);
+      }
+    }
 
     // Filtering orders based on search param
     if (search) {
@@ -100,18 +134,6 @@ export class OrderController {
 
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
-
-    // Filtering orders based on designerId param
-    if (designerId)
-      combinedDomain.push(['x_studio_designers_assigned', 'ilike', designerId]);
-
-    // Filtering orders based on technicianId param
-    if (technicianId)
-      combinedDomain.push([
-        'x_studio_technicians_assigned',
-        'ilike',
-        technicianId,
-      ]);
 
     let orders = [];
     let totalOrders = 0;
@@ -156,7 +178,7 @@ export class OrderController {
           combinedDomain,
           page,
           pageSize,
-          'x_studio_designers_assigned DESC',
+          'x_studio_designer_date_assignment DESC',
         );
         orders = data;
         totalOrders = total;
@@ -313,7 +335,8 @@ export class OrderController {
     for (const task of tasks) {
       if (
         task.previousTasks &&
-        task.previousTasks.some((prev) => prev.id === taskId) // Ensure to check the id property
+        task.previousTasks.some((prev) => prev.id === taskId) &&
+        task.status === 'ON HOLD' // Ensure to check the id property
       ) {
         task.isActive = true;
         task.status = 'IN-PROGRESS';
@@ -330,7 +353,9 @@ export class OrderController {
         //Notifying  technician
         this.notificationService.notifyUser(task.technicianId, {
           type: 'success',
-          message: `${normalizedOrder.designersAssigned[0]?.name} assigned you a task`,
+          message: normalizedOrder.designersAssigned[0]?.name
+            ? `${normalizedOrder.designersAssigned[0]?.name} assigned you a task`
+            : 'A task was assigned to you',
         });
 
         //Notifying  designer
@@ -522,7 +547,7 @@ export class OrderController {
     @Param('taskId') taskId: string,
     @Body() data: EditTaskDto,
     @Request() req,
-  ): Promise<Task> {
+  ): Promise<Task[]> {
     const UID = await authenticateFromOdoo();
 
     //Founding order
@@ -563,6 +588,9 @@ export class OrderController {
       }
     }
 
+    //Cancel all subtasks
+    cancelTasks(tasks, taskId);
+
     //Stringify task
     const stringifiedUpdatedTasks = JSON.stringify(tasks);
 
@@ -580,7 +608,7 @@ export class OrderController {
       message: `${req.user.username} cancelled one of your tasks: "${taskFound.name}"`,
     });
 
-    return taskFound;
+    return tasks;
   }
 
   @Post()

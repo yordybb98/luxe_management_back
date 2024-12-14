@@ -1,4 +1,5 @@
 import { Request } from 'express';
+import { Task } from 'src/common/types/tasks';
 const fs = require('fs');
 
 export function extractTokenFromHeader(request: Request): string | undefined {
@@ -48,4 +49,16 @@ export const sanitizePathName = (name: string): string => {
   }
 
   return sanitized;
+};
+
+export const cancelTasks = (tasks: Task[], taskId: string) => {
+  for (const task of tasks) {
+    // Check if the current task has the given taskId in its previousTasks
+    if (task.previousTasks.some((subtask) => subtask.id === taskId)) {
+      task.status = 'CANCELLED';
+
+      // Recursively check and cancel subtasks of this task
+      cancelTasks(tasks, task.id);
+    }
+  }
 };
