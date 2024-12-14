@@ -40,7 +40,7 @@ export class NotificationGateway implements OnModuleInit {
         });
 
         console.log(
-          `User connected: ${payload.email} (Socket ID: ${socket.id})`,
+          `User connected: ${payload.username} (Socket ID: ${socket.id})`,
         );
 
         // Store the connection
