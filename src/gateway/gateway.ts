@@ -61,14 +61,12 @@ export class NotificationGateway implements OnModuleInit {
   }
 
   sendMessageToUser(userId: number, message: any): void {
-    console.log(this.activeUsers.size);
     const targetSocket = this.activeUsers.get(userId);
     if (targetSocket) {
       targetSocket.emit('onMessage', message);
     } else {
       console.log(`User ${userId} is not connected.`);
     }
-    // this.saveNotification(userId, message);
   }
 
   broadcastMessage(message: any): void {

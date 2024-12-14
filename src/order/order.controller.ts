@@ -296,7 +296,7 @@ export class OrderController {
 
     //Notifying admin
     this.notificationService.notifyAllAdmins({
-      type: 'success',
+      type: 'SUCCESS',
       message: `${req.user.username} finished order "${normalizedOrder.normalizedOrder.name}" of client "${normalizedOrder.normalizedOrder.companyName}"`,
     });
 
@@ -353,7 +353,7 @@ export class OrderController {
 
         //Notifying  technician
         this.notificationService.notifyUser(task.technicianId, {
-          type: 'success',
+          type: 'SUCCESS',
           message: normalizedOrder.designersAssigned[0]?.name
             ? `${normalizedOrder.designersAssigned[0]?.name} assigned you a task`
             : 'A task was assigned to you',
@@ -363,7 +363,7 @@ export class OrderController {
         this.notificationService.notifyUser(
           normalizedOrder.designersAssignedIds[0],
           {
-            type: 'success',
+            type: 'SUCCESS',
             message: `Task "${task.name}" of order "${normalizedOrder.name}" was started automatically `,
           },
         );
@@ -415,7 +415,7 @@ export class OrderController {
       this.notificationService.notifyUser(
         normalizedOrder.designersAssignedIds[0],
         {
-          type: 'success',
+          type: 'SUCCESS',
           message: `All tasks of order "${normalizedOrder.name}" are completed`,
         },
       );
@@ -431,7 +431,7 @@ export class OrderController {
     this.notificationService.notifyUser(
       normalizedOrder.designersAssignedIds[0],
       {
-        type: 'success',
+        type: 'SUCCESS',
         message: `Task "${taskFound.name}" of order "${normalizedOrder.name}" was finished by ${req.user.username}`,
       },
     );
@@ -527,14 +527,14 @@ export class OrderController {
     if (data.technicianId && taskFound.technicianId !== data.technicianId) {
       //Notifying Older technician
       this.notificationService.notifyUser(taskFound.technicianId, {
-        type: 'success',
+        type: 'SUCCESS',
         message: `${req.user.username} removed you from task: "${taskFound.name}"`,
       });
     }
 
     //Notifying new technician
     this.notificationService.notifyUser(data.technicianId, {
-      type: 'success',
+      type: 'SUCCESS',
       message: `${req.user.username} assigned you a new task: "${taskFound.name}"`,
     });
 
@@ -605,7 +605,7 @@ export class OrderController {
 
     //Notifying  technician
     this.notificationService.notifyUser(data.technicianId, {
-      type: 'success',
+      type: 'SUCCESS',
       message: `${req.user.username} cancelled one of your tasks: "${taskFound.name}"`,
     });
 
@@ -685,7 +685,7 @@ export class OrderController {
 
       //Notifying  designer
       this.notificationService.notifyUser(data.designerId, {
-        type: 'success',
+        type: 'SUCCESS',
         message: `${req.user.username} assigned you an order: "${order.normalizedOrder.name}"`,
       });
     } catch (err) {
@@ -797,7 +797,7 @@ export class OrderController {
         ),
       );
 
-      console.log(`Proposal uploaded sucessfully to`, { filePaths });
+      console.log(`Proposal uploaded SUCCESSfully to`, { filePaths });
 
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
@@ -807,7 +807,7 @@ export class OrderController {
 
       //Notifying  admin
       this.notificationService.notifyAllAdmins({
-        type: 'success',
+        type: 'SUCCESS',
         message: `${req.user.username} uploaded a proposal to order "${order.normalizedOrder?.name}" of client "${order.normalizedOrder.companyName}"`,
       });
 
@@ -889,7 +889,7 @@ export class OrderController {
 
       //Notifying techinician
       this.notificationService.notifyUser(data.technicianId, {
-        type: 'success',
+        type: 'SUCCESS',
         message: `${req.user.username} assigned you a new task`,
       });
 

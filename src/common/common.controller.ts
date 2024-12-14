@@ -5,7 +5,9 @@ import {
   getOdooTeams,
 } from 'src/order/odooImport/api';
 import { Stage } from './types/stage';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Common')
 @Controller('')
 export class CommonController {
   constructor() {}

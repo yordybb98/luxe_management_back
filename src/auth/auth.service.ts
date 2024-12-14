@@ -34,7 +34,7 @@ export class AuthService {
     }
 
     //removing password from response
-    const { password, id, ...result } = user;
+    const { password, ...result } = user;
 
     //contructing token data
     const payload: PayloadToken = {

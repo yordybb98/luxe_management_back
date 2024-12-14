@@ -130,9 +130,10 @@ export class UserController {
     //removing sensitive data from response
     const { password, ...rest } = await this.userService.createUser(data);
 
+    //Notifying admin
     this.notificationService.notifyUser(req.user.sub, {
       message: `User ${data.name} created successfully`,
-      type: 'success',
+      type: 'SUCCESS',
     });
 
     return rest;
@@ -140,9 +141,21 @@ export class UserController {
 
   @Patch(':id')
   @Permissions(Permission.UpdateUsers)
-  async updateUser(@Param('id') id: string, @Body() data: User): Promise<User> {
+  async updateUser(
+    @Param('id') id: string,
+    @Body() data: User,
+    @Request() req,
+  ): Promise<User> {
     try {
-      return await this.userService.updateUser(Number(id), data);
+      //Updating user
+      const updatedUser = await this.userService.updateUser(Number(id), data);
+
+      //Notifying admin
+      this.notificationService.notifyUser(req.user.sub, {
+        message: `User ${data.name} created successfully`,
+        type: 'SUCCESS',
+      });
+      return updatedUser;
     } catch (err) {
       throw new NotFoundException("User doesn't exist");
     }
@@ -179,7 +192,7 @@ export class UserController {
 
       this.notificationService.notifyUser(req.user.sub, {
         message: `User ${userDeleted.name} deleted successfully`,
-        type: 'success',
+        type: 'SUCCESS',
       });
       return rest;
     } catch (err) {

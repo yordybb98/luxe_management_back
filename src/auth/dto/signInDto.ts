@@ -67,6 +67,7 @@ export class SignInResponseDto {
   email: string;
   roleId: number;
   token: string;
+  id: number;
 }
 
 export class SignUpResponseDto {

@@ -49,6 +49,13 @@ enum Permission {
   DeleteUsers
 }
 
+enum NotificationType {
+  SUCCESS
+  ERROR
+  INFO
+  WARNING
+}
+
 ///////////////////////////
 //////////MODELS///////////
 //////////////////////////
@@ -138,11 +145,13 @@ model Role {
 }
 
 model Notification {
-  id        Int      @id @default(autoincrement())
+  id        Int              @id @default(autoincrement())
   userId    Int
-  message   Json
-  timestamp DateTime @default(now())
-  delivered Boolean  @default(false)
+  message   String
+  type      NotificationType
+  source    String?
+  timestamp DateTime         @default(now())
+  readed    Boolean          @default(false)
 
   // Define the relationship with the User model
   user User @relation(fields: [userId], references: [id])
