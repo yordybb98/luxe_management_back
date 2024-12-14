@@ -136,7 +136,19 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
     const record = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
-        [db, uid, password, 'crm.lead', 'read', [id], {}],
+        [
+          db,
+          uid,
+          password,
+          'crm.lead',
+          'search_read',
+          [
+            [
+              ['id', '=', id],
+              ['company_id', '=', 1],
+            ],
+          ],
+        ],
         (err: any, record: any[]) => {
           if (err) {
             reject(err);
