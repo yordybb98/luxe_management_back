@@ -352,10 +352,16 @@ export class OrderController {
         uniqueUserAssignedIds.add(task.technicianId);
 
         //Notifying  technician
+
+        //Getting Task Assigner Name
+        const taskAssignerName = task.assignedBy
+          ? (await this.usersService.getUserById(task.assignedBy)).name
+          : null;
+
         this.notificationService.notifyUser(task.technicianId, {
           type: 'SUCCESS',
-          message: normalizedOrder.designersAssigned[0]?.name
-            ? `${normalizedOrder.designersAssigned[0]?.name} assigned you a task`
+          message: taskAssignerName
+            ? `${taskAssignerName} assigned you a task`
             : 'A task was assigned to you',
         });
 
@@ -410,31 +416,27 @@ export class OrderController {
       }
     }
 
-    //Notifying designer if all tasks are completed
-    if (tasks.every((task) => task.status === 'COMPLETED')) {
-      this.notificationService.notifyUser(
-        normalizedOrder.designersAssignedIds[0],
-        {
-          type: 'SUCCESS',
-          message: `All tasks of order "${normalizedOrder.name}" are completed`,
-        },
-      );
-    }
-
     //Stringify task
     const updatedTasks = JSON.stringify(tasks);
 
     //Updating task
     await updateOdooOrder(UID, +orderId, 'x_studio_tasks', updatedTasks);
 
-    //Notifying designer
-    this.notificationService.notifyUser(
-      normalizedOrder.designersAssignedIds[0],
-      {
+    //Notifying who assigned the Task
+    if (taskFound.assignedBy) {
+      this.notificationService.notifyUser(taskFound.assignedBy, {
         type: 'SUCCESS',
         message: `Task "${taskFound.name}" of order "${normalizedOrder.name}" was finished by ${req.user.username}`,
-      },
-    );
+      });
+    }
+
+    //Notifying last task assigner if all tasks are completed
+    if (tasks.every((task) => task.status === 'COMPLETED')) {
+      this.notificationService.notifyUser(taskFound.assignedBy, {
+        type: 'SUCCESS',
+        message: `All tasks of order "${normalizedOrder.name}" are completed`,
+      });
+    }
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //extracting tasks that are not assigned to the current user (only if user is a technician)
