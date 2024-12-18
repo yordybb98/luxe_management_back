@@ -337,7 +337,7 @@ export class OrderController {
       if (
         task.previousTasks &&
         task.previousTasks.some((prev) => prev.id === taskId) &&
-        task.status === 'ON HOLD' // Ensure to check the id property
+        task.status === 'ON HOLD'
       ) {
         task.isActive = true;
         task.status = 'IN-PROGRESS';
@@ -366,13 +366,10 @@ export class OrderController {
         });
 
         //Notifying  designer
-        this.notificationService.notifyUser(
-          normalizedOrder.designersAssignedIds[0],
-          {
-            type: 'SUCCESS',
-            message: `Task "${task.name}" of order "${normalizedOrder.name}" was started automatically `,
-          },
-        );
+        this.notificationService.notifyUser(task.assignedBy, {
+          type: 'SUCCESS',
+          message: `Task "${task.name}" of order "${normalizedOrder.name}" was started automatically `,
+        });
 
         // Convert Set back to Array
         const parsedUserAssignedIds = [...uniqueUserAssignedIds];
@@ -441,7 +438,11 @@ export class OrderController {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //extracting tasks that are not assigned to the current user (only if user is a technician)
     if (userLoggedIn.role.id === ROLES_IDS.TECHNICIAN) {
-      tasks = tasks.filter((task) => task.technicianId === userLoggedIn.sub);
+      tasks = tasks.filter(
+        (task) =>
+          task.technicianId === userLoggedIn.sub &&
+          (task.status === 'IN-PROGRESS' || task.status === 'COMPLETED'),
+      );
     }
     return tasks;
   }
@@ -977,6 +978,12 @@ export class OrderController {
         const parsedUserAssignedIds = JSON.stringify([
           ...uniqueUserAssignedIds,
         ]);
+
+        //Notifying techinician
+        this.notificationService.notifyUser(data.technicianId, {
+          type: 'SUCCESS',
+          message: `${req.user.username} assigned you a new task`,
+        });
 
         //Assigning user in odoo
         await updateOdooOrder(
