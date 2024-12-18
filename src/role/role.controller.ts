@@ -14,8 +14,8 @@ import { ApiTags } from '@nestjs/swagger';
 import { Permission } from '@prisma/client';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 
+@ApiTags('Role')
 @Controller('role')
-@ApiTags('role')
 export class RoleController {
   constructor(private readonly roleService: RoleService) {}
 

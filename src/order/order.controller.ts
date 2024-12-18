@@ -53,7 +53,7 @@ import { join } from 'path';
 import { NotificationService } from 'src/notification/notification.service';
 const path = require('path');
 
-@ApiTags('order')
+@ApiTags('Order')
 @Controller('order')
 export class OrderController {
   constructor(

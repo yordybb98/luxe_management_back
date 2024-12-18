@@ -12,7 +12,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Public } from '../common/guards/public.guard';
 import { Response } from 'express';
 
-@ApiTags('auth')
+@ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}

@@ -25,7 +25,7 @@ import { ROLES_IDS } from 'settings.config';
 import { ChangePasswordDto } from './dto/changePasswordDto';
 import { NotificationService } from 'src/notification/notification.service';
 
-@ApiTags('user')
+@ApiTags('User')
 @Controller('users')
 export class UserController {
   constructor(
