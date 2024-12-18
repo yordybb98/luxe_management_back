@@ -257,15 +257,21 @@ export class OrderController {
       );
     }
 
-    const ordersWithTechnicians = (
+    const orderWithTechnicians = (
       await this.orderService.getOrdersWithTechnicians([normalizedOrder])
     )[0];
 
-    const ordersWithDesigners = (
-      await this.orderService.getOrdersWithDesigners([ordersWithTechnicians])
+    const orderWithDesigners = (
+      await this.orderService.getOrdersWithDesigners([orderWithTechnicians])
     )[0];
 
-    return { order: orderFound, normalizedOrder: ordersWithDesigners };
+    //Add assigner name to each task
+    for (const task of orderWithDesigners.tasks) {
+      const assigner = await this.usersService.getUserById(task.assignedBy);
+      task.assignerName = assigner.name;
+    }
+
+    return { order: orderFound, normalizedOrder: orderWithDesigners };
   }
 
   @Post(':id/finish')
