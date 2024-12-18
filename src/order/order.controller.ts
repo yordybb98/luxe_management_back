@@ -160,54 +160,158 @@ export class OrderController {
 
       orders = data;
       totalOrders = total;
-    } else {
-      combinedDomain.push(['stage_id', '!=', STAGES_IDS.ON_HOLD]);
-      if (userRoleID === ROLES_IDS.DESIGNER) {
-        // Filtering orders based on designerRole
+    }
 
-        //Searching the exact value to avoid partial matches like 1 or 10 or 111
+    const normalizedOrders = orders.map((order) => normalizeOrder(order));
+
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (userRoleID === ROLES_IDS.TECHNICIAN) {
+      normalizedOrders.forEach((order) => {
+        order.tasks = order.tasks.filter(
+          (task) =>
+            task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
+        );
+      });
+    }
+
+    const getOrdersWithTechnicians =
+      await this.orderService.getOrdersWithTechnicians(normalizedOrders);
+
+    const ordersWithDesigners = await this.orderService.getOrdersWithDesigners(
+      getOrdersWithTechnicians,
+    );
+
+    return { data: ordersWithDesigners, total: totalOrders };
+  }
+
+  @Get('/my-orders')
+  @Permissions(Permission.ViewOrders)
+  async getMyOrders(
+    @Request() req,
+    @Query('page') page,
+    @Query('pageSize') pageSize,
+    @Query('stageId') stageId,
+    @Query('search') search,
+    @Query('designerId') designerId,
+    @Query('technicianId') technicianId,
+    @Query('order') order,
+  ): Promise<GetAllOrdersResponseDto> {
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+    //Creating combined domain to filter orders
+    const combinedDomain = [];
+    // Filtering orders based on designerId param
+    if (designerId) {
+      if (designerId === '0') {
         combinedDomain.push(
-          '|', // OR logic
-          ['x_studio_designers_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
-          '|', // Additional OR logic
-          ['x_studio_designers_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
           '|',
-          ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
-          ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+          '|',
+          ['x_studio_designers_assigned', '=', false], // Check for null/undefined
+          ['x_studio_designers_assigned', '=', []], // Check for an empty array
+          ['x_studio_designers_assigned', '=', '[]'], // Check for an empty array as string
         );
-
-        const { data, total } = await searchOdooOrder(
-          UID,
-          combinedDomain,
-          page,
-          pageSize,
-          'x_studio_designer_date_assignment DESC',
-        );
-        orders = data;
-        totalOrders = total;
-      } else if (userRoleID === ROLES_IDS.TECHNICIAN) {
-        //Filtering orders based on technician Role
-
-        //Searching the exact value to avoid partial matches like 1 or 10 or 111
+      } else {
         combinedDomain.push(
-          '|', // OR logic
-          ['x_studio_technicians_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
-          '|', // Additional OR logic
-          ['x_studio_technicians_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
-          '|',
-          ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
-          ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
         );
-
-        const { data, total } = await searchOdooOrder(
-          UID,
-          combinedDomain,
-          page,
-          pageSize,
-        );
-        orders = data;
-        totalOrders = total;
       }
+    }
+
+    // Filtering orders based on technicianId param
+    if (technicianId) {
+      if (technicianId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_technicians_assigned', '=', false], // Check for null/undefined
+          ['x_studio_technicians_assigned', '=', []], // Check for an empty array
+          ['x_studio_technicians_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push([
+          'x_studio_technicians_assigned',
+          'ilike',
+          technicianId,
+        ]);
+      }
+    }
+
+    // Filtering orders based on search param
+    if (search) {
+      // Searching by phone
+      combinedDomain.push('|', ['phone_sanitized', 'ilike', search]);
+
+      // Searching by client name
+      combinedDomain.push('|', ['partner_id', 'ilike', search]);
+
+      // Searching by name or description
+      combinedDomain.push(
+        '|',
+        ['name', 'ilike', search],
+        ['x_studio_order_description', 'ilike', search],
+      );
+    }
+
+    // Filtering orders based on stageId param
+    if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
+
+    //Filtering only Luxe Graphics orders
+    combinedDomain.push(['company_id', '=', 1]);
+
+    let orders = [];
+    let totalOrders = 0;
+
+    //Authenticating Odoo
+    const UID = await authenticateFromOdoo();
+
+    //Getting orders from odoo based on user role
+    const userRoleID = userLoggedIn.role.id;
+
+    combinedDomain.push(['stage_id', '!=', STAGES_IDS.ON_HOLD]);
+    if (userRoleID === ROLES_IDS.DESIGNER) {
+      // Filtering orders based on designerRole
+
+      //Searching the exact value to avoid partial matches like 1 or 10 or 111
+      combinedDomain.push(
+        '|', // OR logic
+        ['x_studio_designers_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
+        '|', // Additional OR logic
+        ['x_studio_designers_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
+        '|',
+        ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+        ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+      );
+
+      const { data, total } = await searchOdooOrder(
+        UID,
+        combinedDomain,
+        page,
+        pageSize,
+        'x_studio_designer_date_assignment DESC',
+      );
+      orders = data;
+      totalOrders = total;
+    } else if (userRoleID === ROLES_IDS.TECHNICIAN) {
+      //Filtering orders based on technician Role
+
+      //Searching the exact value to avoid partial matches like 1 or 10 or 111
+      combinedDomain.push(
+        '|', // OR logic
+        ['x_studio_technicians_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
+        '|', // Additional OR logic
+        ['x_studio_technicians_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
+        '|',
+        ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+        ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+      );
+
+      const { data, total } = await searchOdooOrder(
+        UID,
+        combinedDomain,
+        page,
+        pageSize,
+      );
+      orders = data;
+      totalOrders = total;
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
@@ -267,8 +371,10 @@ export class OrderController {
 
     //Add assigner name to each task
     for (const task of orderWithDesigners.tasks) {
-      const assigner = await this.usersService.getUserById(task.assignedBy);
-      task.assignerName = assigner.name;
+      if (task.assignedBy) {
+        const assigner = await this.usersService.getUserById(task.assignedBy);
+        if (assigner) task.assignerName = assigner.name;
+      }
     }
 
     return { order: orderFound, normalizedOrder: orderWithDesigners };
