@@ -62,7 +62,7 @@ model User {
   phone         String?
   address       String?
   notifications Notification[]
-  userType      UserType? // Keep it optional for now
+  userType      UserType?
 }
 
 model Role {
