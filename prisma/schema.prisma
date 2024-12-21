@@ -2,16 +2,6 @@
 //////////ENUMS///////////
 //////////////////////////
 enum Permission {
-  // ViewClients
-  // CreateClients
-  // UpdateClients
-  // DeleteClients
-
-  // ViewDepartments
-  // CreateDepartments
-  // UpdateDepartments
-  // DeleteDepartments
-
   ViewOrders
   ViewAllOrders
   CreateOrders
@@ -24,22 +14,10 @@ enum Permission {
   EditTasks
   CancelTasks
   UploadProposal
-
-  // ViewProjects
-  // CreateProjects
-  // UpdateProjects
-  // DeleteProjects
-
   ViewRoles
   CreateRoles
   UpdateRoles
   DeleteRoles
-
-  // ViewStatus
-  // CreateStatus
-  // UpdateStatus
-  // DeleteStatus
-
   ViewUsers
   CreateUsers
   UpdateUsers
