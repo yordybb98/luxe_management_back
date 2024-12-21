@@ -3,7 +3,6 @@ import { User, UserType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/createUserDto';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
-import { ROLES_IDS } from 'settings.config';
 
 @Injectable()
 export class UserService {
@@ -148,9 +147,7 @@ export class UserService {
   async getAllAdmins(): Promise<User[]> {
     return this.prisma.user.findMany({
       where: {
-        role: {
-          id: ROLES_IDS.ADMIN,
-        },
+        userType: UserType.ADMIN,
       },
     });
   }

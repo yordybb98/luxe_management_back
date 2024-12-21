@@ -1,4 +1,4 @@
-import { Permission, PrismaClient } from '@prisma/client';
+import { Permission, PrismaClient, UserType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
@@ -85,7 +85,7 @@ async function main() {
   }
 
   let adminExists = await prisma.user.findFirst({
-    where: { role: { name: 'Admin' } },
+    where: { userType: UserType.ADMIN },
   });
 
   if (!adminExists) {
@@ -103,6 +103,7 @@ async function main() {
         email: 'admin@localhost',
         password: hashedPassword,
         roleId: adminRoleExists.id,
+        userType: UserType.ADMIN,
       },
     });
     console.log('--------------------');

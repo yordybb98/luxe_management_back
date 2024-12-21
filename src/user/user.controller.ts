@@ -21,7 +21,6 @@ import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
-import { ROLES_IDS } from 'settings.config';
 import { ChangePasswordDto } from './dto/changePasswordDto';
 import { NotificationService } from 'src/notification/notification.service';
 

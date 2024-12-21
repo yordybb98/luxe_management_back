@@ -43,6 +43,7 @@ export class AuthService {
       username: user.username,
       email: user.email,
       role: user.role,
+      userType: user.userType,
     };
 
     //signing token

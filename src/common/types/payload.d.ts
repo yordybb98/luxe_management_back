@@ -6,4 +6,5 @@ export type PayloadToken = {
   username: string;
   email: string;
   role: Role;
+  userType: UserType;
 };

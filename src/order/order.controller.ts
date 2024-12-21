@@ -37,14 +37,13 @@ import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
 import { cancelTasks, createFolders, sanitizePathName } from 'src/utils/utils';
 import {
-  ROLES_IDS,
   settings,
   STAGES_IDS,
   STAGESIDSALLOWEDTODOAPROPOSAL,
 } from 'settings.config';
 import { Task } from 'src/common/types/tasks';
 import { GetAllOrdersResponseDto } from './dto/get-all-orders-response.dto';
-import { Permission } from '@prisma/client';
+import { Permission, UserType } from '@prisma/client';
 import { EditTaskDto } from './dto/edit-task.dto';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from 'src/images/images.service';
@@ -145,7 +144,7 @@ export class OrderController {
     const UID = await authenticateFromOdoo();
 
     //Getting orders from odoo based on user role
-    const userRoleID = userLoggedIn.role.id;
+    const currentUserType = userLoggedIn.userType;
     const canViewAllOrders = userLoggedIn.role.permissions.includes(
       Permission.ViewAllOrders,
     );
@@ -165,7 +164,7 @@ export class OrderController {
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userRoleID === ROLES_IDS.TECHNICIAN) {
+    if (currentUserType === UserType.TECHNICIAN) {
       normalizedOrders.forEach((order) => {
         order.tasks = order.tasks.filter(
           (task) =>
@@ -263,11 +262,11 @@ export class OrderController {
     //Authenticating Odoo
     const UID = await authenticateFromOdoo();
 
-    //Getting orders from odoo based on user role
-    const userRoleID = userLoggedIn.role.id;
+    //Getting orders from odoo based on user type
+    const currentUserType = userLoggedIn.userType;
 
     combinedDomain.push(['stage_id', '!=', STAGES_IDS.ON_HOLD]);
-    if (userRoleID === ROLES_IDS.DESIGNER) {
+    if (currentUserType === UserType.DESIGNER) {
       // Filtering orders based on designerRole
 
       //Searching the exact value to avoid partial matches like 1 or 10 or 111
@@ -290,7 +289,7 @@ export class OrderController {
       );
       orders = data;
       totalOrders = total;
-    } else if (userRoleID === ROLES_IDS.TECHNICIAN) {
+    } else if (currentUserType === UserType.TECHNICIAN) {
       //Filtering orders based on technician Role
 
       //Searching the exact value to avoid partial matches like 1 or 10 or 111
@@ -317,7 +316,7 @@ export class OrderController {
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userRoleID === ROLES_IDS.TECHNICIAN) {
+    if (currentUserType === UserType.TECHNICIAN) {
       normalizedOrders.forEach((order) => {
         order.tasks = order.tasks.filter(
           (task) =>
@@ -346,7 +345,7 @@ export class OrderController {
     const orderFound = await getOdooOrderById(UID, +id);
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
-    const userRoleID = userLoggedIn.role.id;
+    const currentUserType = userLoggedIn.userType;
     //checking if order exists
     if (!orderFound.length) throw new NotFoundException('Order not found');
 
@@ -354,7 +353,7 @@ export class OrderController {
     const normalizedOrder = normalizeOrder(orderFound[0]);
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userRoleID === ROLES_IDS.TECHNICIAN) {
+    if (currentUserType === UserType.TECHNICIAN) {
       normalizedOrder.tasks = normalizedOrder.tasks.filter(
         (task) =>
           task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
@@ -549,7 +548,7 @@ export class OrderController {
 
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
     //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (userLoggedIn.role.id === ROLES_IDS.TECHNICIAN) {
+    if (userLoggedIn.userType === UserType.TECHNICIAN) {
       tasks = tasks.filter(
         (task) =>
           task.technicianId === userLoggedIn.sub &&
