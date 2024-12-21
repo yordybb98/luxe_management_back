@@ -1,6 +1,8 @@
+import { UserType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -52,4 +54,9 @@ export class CreateUserDto {
   @IsString()
   @Transform(({ value }) => value.toString().trim())
   address: string;
+
+  @IsEnum(UserType, {
+    message: 'userType must be a valid enum value: ADMIN, TECHNICIAN, DESIGNER',
+  })
+  userType: UserType;
 }

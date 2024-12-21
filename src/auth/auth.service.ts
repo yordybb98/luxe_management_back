@@ -11,6 +11,7 @@ import { RoleService } from 'src/role/role.service';
 import { PayloadToken } from 'src/common/types/payload';
 import { Request } from 'express';
 import { jwtConstants } from './constants';
+import { UserType } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -57,6 +58,7 @@ export class AuthService {
     phone: string,
     lastName: string,
     address: string,
+    userType: UserType,
   ): Promise<SignUpResponseDto> {
     const role = await this.roleService.getRoleById(roleId);
     if (!role) {
@@ -78,6 +80,7 @@ export class AuthService {
       phone,
       lastName,
       address,
+      userType,
     });
     return {
       username,

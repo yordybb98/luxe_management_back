@@ -47,31 +47,25 @@ export class UserController {
   @Get('/technicians')
   @Permissions(Permission.ViewOrders)
   async getAllTechnicians(): Promise<UserResponseDto[]> {
-    const users = await this.userService.getAllUsers();
+    const technicians = await this.userService.getAllTechnicians();
 
     //removing sensitive data
-    const publicUsersData = users.map(({ password, ...rest }) => rest);
-
-    const technicians = publicUsersData.filter(
-      (user) => user.role.id === ROLES_IDS.TECHNICIAN,
+    const publicTechniciansData = technicians.map(
+      ({ password, ...rest }) => rest,
     );
 
-    return technicians;
+    return publicTechniciansData;
   }
 
   @Get('/designers')
   @Permissions(Permission.AssignDesigner)
   async getAllDesigners(): Promise<UserResponseDto[]> {
-    const users = await this.userService.getAllUsers();
+    const designers = await this.userService.getAllDesigners();
 
     //removing sensitive data
-    const publicUsersData = users.map(({ password, ...rest }) => rest);
+    const publicDesignersData = designers.map(({ password, ...rest }) => rest);
 
-    const designers = publicUsersData.filter(
-      (user) => user.role.id === ROLES_IDS.DESIGNER,
-    );
-
-    return designers;
+    return publicDesignersData;
   }
 
   @Get(':id')
@@ -112,17 +106,6 @@ export class UserController {
       throw new BadRequestException('Role not found');
     }
 
-    //checking if Department was provided
-    // if (data.departmentId) {
-    //   //cheking if departmentExists
-    //   const departmentExists = await this.departmentService.getDepartmentById(
-    //     data.departmentId,
-    //   );
-    //   if (!departmentExists) {
-    //     throw new BadRequestException('Department not found');
-    //   }
-    // }
-
     //hashing password
     data.password = await bcrypt.hash(data.password, 10);
 
@@ -152,7 +135,7 @@ export class UserController {
 
       //Notifying admin
       this.notificationService.notifyUser(req.user.sub, {
-        message: `User ${data.name} created successfully`,
+        message: `User ${data.name} updated successfully`,
         type: 'SUCCESS',
       });
       return updatedUser;

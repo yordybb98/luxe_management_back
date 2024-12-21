@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { User } from '@prisma/client';
+import { User, UserType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/createUserDto';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
@@ -66,6 +66,7 @@ export class UserService {
           phone: data.phone,
           lastName: data.lastName,
           address: data.address,
+          userType: data.userType,
         },
         include: {
           role: true,
@@ -80,12 +81,24 @@ export class UserService {
   }
 
   async updateUser(id: number, data: User): Promise<User> {
-    return this.prisma.user.update({
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+    });
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    const updatedUser = await this.prisma.user.update({
       where: {
         id,
       },
       data,
     });
+
+    return updatedUser;
   }
 
   async changePassword(id: number, newPassword: string): Promise<User> {
@@ -138,6 +151,28 @@ export class UserService {
         role: {
           id: ROLES_IDS.ADMIN,
         },
+      },
+    });
+  }
+
+  async getAllTechnicians(): Promise<UserResponseDto[]> {
+    return this.prisma.user.findMany({
+      where: {
+        userType: UserType.TECHNICIAN,
+      },
+      include: {
+        role: true,
+      },
+    });
+  }
+
+  async getAllDesigners(): Promise<UserResponseDto[]> {
+    return this.prisma.user.findMany({
+      where: {
+        userType: UserType.DESIGNER,
+      },
+      include: {
+        role: true,
       },
     });
   }

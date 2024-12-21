@@ -1,6 +1,8 @@
+import { UserType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
   IsEmail,
+  IsEnum,
   IsNumber,
   IsOptional,
   IsString,
@@ -59,6 +61,11 @@ export class SignUpDto {
   @MinLength(1)
   @IsOptional()
   address: string;
+
+  @IsEnum(UserType, {
+    message: 'userType must be a valid enum value: ADMIN, TECHNICIAN, DESIGNER',
+  })
+  userType: UserType;
 }
 
 export class SignInResponseDto {

@@ -59,6 +59,7 @@ export class AuthController {
       phone,
       lastName,
       address,
+      userType,
     }: SignUpDto,
   ) {
     return this.authService.signUp(
@@ -70,6 +71,7 @@ export class AuthController {
       phone,
       lastName,
       address,
+      userType,
     );
   }
 
