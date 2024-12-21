@@ -35,6 +35,9 @@ export const STAGES_IDS = {
   DESIGN: 27,
 };
 
+// ODOO STAGE FIELD ID
+export const STAGE_FIELD_ID = 9133;
+
 export const STAGESIDSALLOWEDTODOAPROPOSAL = [
   STAGES_IDS.DESIGN, //Design
   STAGES_IDS.ADJUSTMENT_1, //First Adjustment
