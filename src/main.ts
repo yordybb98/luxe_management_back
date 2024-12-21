@@ -43,6 +43,14 @@ async function bootstrap() {
     .setDescription(
       'API documentation for the process management system at Luxe Graphics',
     )
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT', // Optional, can be "JWT" or other
+      },
+      'access-token', // Name of the security definition
+    )
     .setVersion('1.0')
     .build();
 
