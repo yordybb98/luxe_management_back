@@ -1,4 +1,5 @@
 import { OdooOrder } from 'src/common/types/order';
+import { filterStageTransitions, formatDuration } from 'src/utils/utils';
 
 const xmlrpc = require('xmlrpc');
 
@@ -346,6 +347,199 @@ const countAllOdooOrders = async (): Promise<number> => {
   });
 };
 
+const getOrderOdooStageDurations = async (
+  orderId: number,
+): Promise<{ stage: string; duration: number }[]> => {
+  const uid = await authenticateFromOdoo();
+
+  // Step 1: Fetch related messages for the order
+  const messageIds = await new Promise<number[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.message',
+        'search_read',
+        [
+          [
+            ['res_id', '=', orderId],
+            ['model', '=', 'crm.lead'], // Adjust the model as needed
+          ],
+          ['id'],
+        ],
+      ],
+      (err, messages) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(messages.map((m) => m.id));
+      },
+    );
+  });
+
+  // Step 2: Fetch tracking values for the messages
+  const trackingValues = await new Promise<any[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.tracking.value',
+        'search_read',
+        [
+          [['mail_message_id', 'in', messageIds]],
+          ['create_date', 'field_id', 'old_value_char', 'new_value_char'],
+        ],
+      ],
+      (err, values) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(values);
+      },
+    );
+  });
+
+  // Step 3: Filter the tracking values
+  const relevantChanges = filterStageTransitions(trackingValues);
+
+  // Step 4: Process filtered values
+  const stages: { stage: string; duration: number }[] = [];
+
+  relevantChanges.sort(
+    (a, b) =>
+      new Date(a.create_date).getTime() - new Date(b.create_date).getTime(),
+  );
+
+  for (let i = 0; i < relevantChanges.length; i++) {
+    const current = relevantChanges[i];
+    const startTime = new Date(current.create_date);
+    const nextTime =
+      i === relevantChanges.length - 1
+        ? new Date(Date.now() + 5 * 60 * 60 * 1000)
+        : new Date(relevantChanges[i + 1].create_date);
+
+    const durationMs = Math.abs(nextTime.getTime() - startTime.getTime());
+
+    if (current.id == 49315) {
+      console.log('STAGE', current.field_id);
+    }
+
+    if (current.id == 55122) {
+      console.log('FIELD', current.field_id);
+    }
+
+    if (current.id == 50827) {
+      console.log('STAGE', current.field_id);
+    }
+    stages.push({
+      stage: current.new_value_char || 'Unknown',
+      duration: durationMs,
+    });
+  }
+
+  return stages;
+};
+
+const getOrderOdooStageTimeline = async (
+  orderId: number,
+): Promise<
+  { stage: string; startTime: string; endTime: string; duration: string }[]
+> => {
+  const uid = await authenticateFromOdoo();
+
+  // Step 1: Fetch related messages for the order
+  const messageIds = await new Promise<number[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.message',
+        'search_read',
+        [
+          [
+            ['res_id', '=', orderId],
+            ['model', '=', 'crm.lead'], // Adjust the model as needed
+          ],
+          ['id'],
+        ],
+      ],
+      (err, messages) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(messages.map((m) => m.id));
+      },
+    );
+  });
+
+  // Step 2: Fetch tracking values for the messages
+  const trackingValues = await new Promise<any[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.tracking.value',
+        'search_read',
+        [
+          [['mail_message_id', 'in', messageIds]],
+          ['create_date', 'field_id', 'old_value_char', 'new_value_char'],
+        ],
+      ],
+      (err, values) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(values);
+      },
+    );
+  });
+
+  // Step 3: Filter tracking values for stage changes
+  const stageChanges = filterStageTransitions(trackingValues);
+
+  // Step 4: Sort changes chronologically
+  stageChanges.sort(
+    (a, b) =>
+      new Date(a.create_date).getTime() - new Date(b.create_date).getTime(),
+  );
+
+  // Step 5: Build the timeline
+  const timeline: {
+    stage: string;
+    startTime: string;
+    endTime: string;
+    duration: string;
+  }[] = [];
+
+  for (let i = 0; i < stageChanges.length; i++) {
+    const current = stageChanges[i];
+    const startTime = new Date(current.create_date);
+    const endTime =
+      i === stageChanges.length - 1
+        ? new Date(Date.now() + 5 * 60 * 60 * 1000) // Adjust for UTC+5
+        : new Date(stageChanges[i + 1].create_date);
+
+    const durationMs = Math.abs(endTime.getTime() - startTime.getTime());
+
+    timeline.push({
+      stage: current.new_value_char || 'Unknown',
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString(),
+      duration: formatDuration(durationMs),
+    });
+  }
+
+  return timeline;
+};
+
 export {
   authenticateFromOdoo,
   getOdooVersion,
@@ -358,4 +552,6 @@ export {
   getAllOddoOrders,
   countAllOdooOrders,
   getOdooTeams,
+  getOrderOdooStageDurations,
+  getOrderOdooStageTimeline,
 };

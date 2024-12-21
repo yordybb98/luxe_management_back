@@ -22,6 +22,8 @@ import { Permissions } from 'src/common/decorators/permissions.decorators';
 import {
   authenticateFromOdoo,
   getOdooOrderById,
+  getOrderOdooStageDurations,
+  getOrderOdooStageTimeline,
   searchOdooOrder,
   updateOdooOrder,
 } from './odooImport/api';
@@ -35,7 +37,12 @@ import { JwtService } from '@nestjs/jwt';
 import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
-import { cancelTasks, createFolders, sanitizePathName } from 'src/utils/utils';
+import {
+  cancelTasks,
+  createFolders,
+  groupDurationsByStage,
+  sanitizePathName,
+} from 'src/utils/utils';
 import {
   settings,
   STAGES_IDS,
@@ -50,6 +57,7 @@ import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { join } from 'path';
 import { NotificationService } from 'src/notification/notification.service';
+import { Public } from '../common/guards/public.guard';
 const path = require('path');
 
 @ApiTags('Order')
@@ -377,6 +385,24 @@ export class OrderController {
     }
 
     return { order: orderFound, normalizedOrder: orderWithDesigners };
+  }
+
+  @Get(':id/analytics')
+  async orderAnalytics(@Param('id') orderId: string, @Request() req) {
+    try {
+      const stages = await getOrderOdooStageDurations(+orderId);
+      const groupedDurations = groupDurationsByStage(stages);
+
+      const timeLine = await getOrderOdooStageTimeline(+orderId);
+
+      console.log('TimeLine:', timeLine);
+
+      console.log('Stage Durations:', groupedDurations);
+
+      return { timeLine, stagesDuration: groupedDurations };
+    } catch (error) {
+      console.error('Error:', error);
+    }
   }
 
   @Post(':id/finish')
