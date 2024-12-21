@@ -813,7 +813,7 @@ export class OrderController {
   async updateDessignerAssigment(
     @Request() req,
     @Body() data: EditDesignerAssigmentDto,
-  ) {
+  ): Promise<number[]> {
     try {
       //checking if order exists
       const order = await this.getOrderById(data.orderId.toString(), req);
@@ -839,6 +839,8 @@ export class OrderController {
         'x_studio_designers_assigned',
         JSON.stringify(data.designerIds),
       );
+
+      return data.designerIds;
 
       //Notifying  designers
       //TODO Notify all designers envolved
