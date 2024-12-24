@@ -435,6 +435,7 @@ export class OrderController {
     this.notificationService.notifyAllAdmins({
       type: 'SUCCESS',
       message: `${req.user.username} finished order "${normalizedOrder.normalizedOrder.name}" of client "${normalizedOrder.normalizedOrder.companyName}"`,
+      source: `${id}`,
     });
 
     //Changing order status
@@ -500,12 +501,14 @@ export class OrderController {
           message: taskAssignerName
             ? `${taskAssignerName} assigned you a task`
             : 'A task was assigned to you',
+          source: `${orderId}`,
         });
 
         //Notifying  designer
         this.notificationService.notifyUser(task.assignedBy, {
           type: 'SUCCESS',
           message: `Task "${task.name}" of order "${normalizedOrder.name}" was started automatically `,
+          source: `${orderId}`,
         });
 
         // Convert Set back to Array
@@ -561,6 +564,7 @@ export class OrderController {
       this.notificationService.notifyUser(taskFound.assignedBy, {
         type: 'SUCCESS',
         message: `Task "${taskFound.name}" of order "${normalizedOrder.name}" was finished by ${req.user.username}`,
+        source: `${orderId}`,
       });
     }
 
@@ -569,6 +573,7 @@ export class OrderController {
       this.notificationService.notifyUser(taskFound.assignedBy, {
         type: 'SUCCESS',
         message: `All tasks of order "${normalizedOrder.name}" are completed`,
+        source: `${orderId}`,
       });
     }
 
@@ -676,6 +681,7 @@ export class OrderController {
     this.notificationService.notifyUser(data.technicianId, {
       type: 'SUCCESS',
       message: `${req.user.username} assigned you a new task: "${taskFound.name}"`,
+      source: `${orderId}`,
     });
 
     return updatedTask;
@@ -827,6 +833,7 @@ export class OrderController {
       this.notificationService.notifyUser(data.designerId, {
         type: 'SUCCESS',
         message: `${req.user.username} assigned you an order: "${order.normalizedOrder.name}"`,
+        source: `${data.orderId}`,
       });
     } catch (err) {
       console.error({ err });
@@ -951,6 +958,7 @@ export class OrderController {
       this.notificationService.notifyAllAdmins({
         type: 'SUCCESS',
         message: `${req.user.username} uploaded a proposal to order "${order.normalizedOrder?.name}" of client "${order.normalizedOrder.companyName}"`,
+        source: `${orderId}`,
       });
 
       console.log(`Order with id ${orderId} was moved to Proposal`);
@@ -1033,6 +1041,7 @@ export class OrderController {
       this.notificationService.notifyUser(data.technicianId, {
         type: 'SUCCESS',
         message: `${req.user.username} assigned you a new task`,
+        source: `${data.orderId}`,
       });
 
       //Stringify tasks
@@ -1122,6 +1131,7 @@ export class OrderController {
         this.notificationService.notifyUser(data.technicianId, {
           type: 'SUCCESS',
           message: `${req.user.username} assigned you a new task`,
+          source: `${data.orderId}`,
         });
 
         //Assigning user in odoo

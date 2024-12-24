@@ -14,7 +14,7 @@ export class NotificationService {
 
   async notifyUser(
     userId: number,
-    content: { message: string; type: NotificationType },
+    content: { message: string; type: NotificationType; source?: string },
   ): Promise<void> {
     const notification: Omit<Notification, 'id'> = {
       timestamp: new Date(),
@@ -22,7 +22,7 @@ export class NotificationService {
       userId,
       message: content.message,
       readed: false,
-      source: 'user',
+      source: content.source || '',
     };
 
     const newNotification = await this.saveNotification(notification);
@@ -39,6 +39,7 @@ export class NotificationService {
   async notifyAllAdmins(content: {
     message: string;
     type: NotificationType;
+    source?: string;
   }): Promise<void> {
     //Fetching all admins
     console.log('Notifying all admins');
@@ -52,7 +53,7 @@ export class NotificationService {
         userId: admin.id,
         message: content.message,
         readed: false,
-        source: 'user',
+        source: content.source || '',
       };
 
       const newNotification = await this.saveNotification(notification);
@@ -70,7 +71,7 @@ export class NotificationService {
   async saveNotification(
     notification: Omit<Notification, 'id'>,
   ): Promise<Notification> {
-    if(!notification.userId) return;
+    if (!notification.userId) return;
     return await this.prismaService.notification.create({
       data: {
         userId: notification.userId,
