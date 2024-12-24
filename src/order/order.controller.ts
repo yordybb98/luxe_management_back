@@ -395,10 +395,6 @@ export class OrderController {
 
       const timeLine = await getOrderOdooStageTimeline(+orderId);
 
-      console.log('TimeLine:', timeLine);
-
-      console.log('Stage Durations:', groupedDurations);
-
       return { timeLine, stagesDuration: groupedDurations };
     } catch (error) {
       console.error('Error:', error);
