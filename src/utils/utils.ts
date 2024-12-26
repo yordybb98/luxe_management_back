@@ -108,3 +108,12 @@ export const filterStageTransitions = (trackingValues: any[]): any[] => {
     return fieldId === stageFieldId; // Include only changes with the relevant field ID
   });
 };
+
+export const timeToLocalTimeZone = (
+  time: string,
+  timeZoneOffsetMs: number,
+): Date => {
+  const date = new Date(new Date(time).getTime() - timeZoneOffsetMs);
+
+  return date;
+};

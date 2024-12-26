@@ -1,5 +1,9 @@
 import { OdooOrder } from 'src/common/types/order';
-import { filterStageTransitions, formatDuration } from 'src/utils/utils';
+import {
+  filterStageTransitions,
+  formatDuration,
+  timeToLocalTimeZone,
+} from 'src/utils/utils';
 
 const xmlrpc = require('xmlrpc');
 
@@ -521,11 +525,19 @@ const getOrderOdooStageTimeline = async (
 
   for (let i = 0; i < stageChanges.length; i++) {
     const current = stageChanges[i];
-    const startTime = new Date(current.create_date);
+    const timeZoneOffsetMs =
+      new Date(current.create_date).getTimezoneOffset() * 60 * 1000; // Get the timezone offset in milliseconds;
+    const startTime = timeToLocalTimeZone(
+      current.create_date,
+      timeZoneOffsetMs,
+    );
     const endTime =
       i === stageChanges.length - 1
-        ? new Date(Date.now() + 5 * 60 * 60 * 1000) // Adjust for UTC+5
-        : new Date(stageChanges[i + 1].create_date);
+        ? new Date(Date.now())
+        : timeToLocalTimeZone(
+            stageChanges[i + 1].create_date,
+            timeZoneOffsetMs,
+          );
 
     const durationMs = Math.abs(endTime.getTime() - startTime.getTime());
 
