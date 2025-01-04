@@ -5,6 +5,7 @@ import * as sharp from 'sharp';
 import * as pathLib from 'path';
 import * as fs from 'fs';
 import { writeFile } from 'fs/promises';
+import { SUPPORTED_IMAGE_EXTENSIONS } from 'settings.config';
 
 @Injectable()
 export class ImageService {
@@ -59,17 +60,22 @@ export class ImageService {
       })
       .toBuffer();
 
-      // Ensure the watermark size is smaller than the resized image
-  const resizedImageMetadata = await sharp(resizedImageBuffer).metadata();
-  if (watermarkMetadata.width > resizedImageMetadata.width || watermarkMetadata.height > resizedImageMetadata.height) {
-    // Scale down the watermark if necessary
-    watermark = await sharp(Buffer.from(watermarkBuffer))
-      .resize({
-        width: Math.round(resizedImageMetadata.width * reductionFactor * 0.2),
-        height: Math.round(resizedImageMetadata.height * reductionFactor * 0.2),
-      })
-      .toBuffer();
-  }
+    // Ensure the watermark size is smaller than the resized image
+    const resizedImageMetadata = await sharp(resizedImageBuffer).metadata();
+    if (
+      watermarkMetadata.width > resizedImageMetadata.width ||
+      watermarkMetadata.height > resizedImageMetadata.height
+    ) {
+      // Scale down the watermark if necessary
+      watermark = await sharp(Buffer.from(watermarkBuffer))
+        .resize({
+          width: Math.round(resizedImageMetadata.width * reductionFactor * 0.2),
+          height: Math.round(
+            resizedImageMetadata.height * reductionFactor * 0.2,
+          ),
+        })
+        .toBuffer();
+    }
 
     // Add the watermark
     const finalImageBuffer = await sharp(resizedImageBuffer)
@@ -169,20 +175,37 @@ export class ImageService {
     }
   }
 
-  /* async getImageStream(path: string) {
-    const directoryPath = join(__dirname, '..', 'uploads', path);
+  async getAllImages(folderPath: string) {
     try {
-      // Lee el contenido del directorio
-      const files = await readdir(directoryPath);
+      const decodedPath = decodeURIComponent(folderPath);
 
-      // Filtra solo los archivos de imagen
-      const images = files.filter(
-        (file) => /\.(jpg|jpeg|png|gif|bmp|svg)$/i.test(file), // Añade más extensiones si es necesario
-      );
+      const previewPath = pathLib.join(decodedPath, 'Preview');
 
-      console.log({ images });
-      return images;
-      // Devuelve la lista de imágenes
-    } catch (err) {}
-  } */
+      if (!fs.existsSync(previewPath)) {
+        throw new Error('Preview folder not found');
+      }
+
+      const files = fs.readdirSync(previewPath);
+
+      const imageFiles = files.filter((file) => {
+        const regex = new RegExp(
+          `\\.(${SUPPORTED_IMAGE_EXTENSIONS.join('|')})$`,
+          'i',
+        );
+        return regex.test(file);
+      }); // Filter image files
+
+      return imageFiles.map((file) => {
+        const newFilePath = pathLib.join(previewPath, file);
+        const encodedPath = encodeURIComponent(newFilePath);
+        return {
+          alt: file,
+          src: `${encodedPath}`, // Keep the full path approach
+        };
+      });
+    } catch (error) {
+      console.error('Error reading images:', error);
+      throw new Error('Error reading images');
+    }
+  }
 }

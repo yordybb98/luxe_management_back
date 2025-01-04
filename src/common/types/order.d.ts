@@ -1,6 +1,7 @@
 import { User } from '@prisma/client';
 import { Task } from './tasks';
 import { Stage } from './stage';
+import { Image } from './image';
 
 export type Order = {
   id: number;
@@ -25,6 +26,7 @@ export type Order = {
   firstAdjustment?: string;
   secondAdjustment?: string;
   finalAdjustment?: string;
+  images?: Image[];
 };
 
 export type OdooOrder = {

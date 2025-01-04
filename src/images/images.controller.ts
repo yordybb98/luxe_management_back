@@ -6,10 +6,16 @@ import {
   UseInterceptors,
   Body,
   UploadedFiles,
+  Get,
+  Param,
+  Res,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './images.service';
 import { ApiTags } from '@nestjs/swagger';
+import * as fs from 'fs';
+import { Response } from 'express';
+import { Public } from 'src/common/guards/public.guard';
 
 @Controller('images')
 @ApiTags('Images')
@@ -28,6 +34,34 @@ export class ImageController {
       ),
     );
     return { filePaths }; //  Return the path for confirmation
+  }
+
+  @Public()
+  //Serve a Single Encoded Image
+  @Get(':filePath')
+  getImage(@Param('filePath') filePath: string, @Res() res: Response) {
+    const decodedPath = decodeURIComponent(filePath);
+    if (fs.existsSync(decodedPath)) {
+      res.sendFile(decodedPath);
+    } else {
+      res.status(404).send('Image not found');
+    }
+  }
+
+  @Public()
+  //Get All Preview Images from a Specific Path
+  @Get('all/:filePath')
+  async getAllImages(
+    @Param('filePath') filePath: string,
+    @Res() res: Response,
+  ) {
+    try {
+      const images = await this.imageService.getAllImages(filePath);
+      res.json({ images });
+    } catch (error) {
+      console.error('Error reading images:', error);
+      res.status(500).json({ message: 'Error reading images', error });
+    }
   }
 
   //   @Post('preview')

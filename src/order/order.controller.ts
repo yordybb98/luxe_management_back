@@ -376,6 +376,12 @@ export class OrderController {
       await this.orderService.getOrdersWithDesigners([orderWithTechnicians])
     )[0];
 
+    const orderImages = await this.imageService.getAllImages(
+      orderWithDesigners.directory,
+    );
+
+    orderWithDesigners.images = orderImages;
+
     //Add assigner name to each task
     for (const task of orderWithDesigners.tasks) {
       if (task.assignedBy) {
