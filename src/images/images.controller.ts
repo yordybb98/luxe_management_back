@@ -9,6 +9,9 @@ import {
   Get,
   Param,
   Res,
+  Query,
+  HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { ImageService } from './images.service';
@@ -39,12 +42,18 @@ export class ImageController {
   @Public()
   //Serve a Single Encoded Image
   @Get(':filePath')
-  getImage(@Param('filePath') filePath: string, @Res() res: Response) {
-    const decodedPath = decodeURIComponent(filePath);
-    if (fs.existsSync(decodedPath)) {
-      res.sendFile(decodedPath);
+  getImage(
+    @Param('filePath') filePath: string,
+    @Query('highQuality') highQuality: string, // Read highQuality as a query param
+    @Res() res: Response,
+  ) {
+    const isHighQuality = highQuality === 'true'; // Convert string to boolean
+    const imagePath = this.imageService.getImagePath(filePath, isHighQuality);
+
+    if (imagePath) {
+      res.sendFile(imagePath);
     } else {
-      res.status(404).send('Image not found');
+      throw new HttpException('Image not found', HttpStatus.NOT_FOUND);
     }
   }
 

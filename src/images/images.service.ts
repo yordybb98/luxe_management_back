@@ -208,4 +208,33 @@ export class ImageService {
       throw new Error('Error reading images');
     }
   }
+
+  getImagePath(filePath: string, highQuality: boolean): string {
+    const decodedPath = decodeURIComponent(filePath);
+
+    if (highQuality) {
+      // Replace 'Preview' folder with 'Arte Final' and adjust file name
+      const previewFolder = 'Preview';
+      const arteFinalFolder = 'Arte Final';
+
+      if (decodedPath.includes(previewFolder)) {
+        const parentFolder = pathLib.dirname(decodedPath); // Get parent directory
+        const newFolderPath = parentFolder.replace(
+          previewFolder,
+          arteFinalFolder,
+        ); // Switch folder
+
+        // Modify filename (remove 'Preview-' prefix)
+        const fileName = pathLib.basename(decodedPath).replace(/^Preview-/, ''); // Removes 'Preview-' prefix
+
+        const arteFinalPath = pathLib.join(newFolderPath, fileName); // Construct new path
+
+        if (fs.existsSync(arteFinalPath)) {
+          return arteFinalPath; // Return the high-quality version if it exists
+        }
+      }
+    }
+
+    return fs.existsSync(decodedPath) ? decodedPath : null; // Fallback to original file if exists
+  }
 }
