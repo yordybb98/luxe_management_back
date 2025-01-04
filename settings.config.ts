@@ -51,4 +51,6 @@ export const ROLES_IDS = {
   TECHNICIAN: 3,
 };
 
-export const SERVER_FRONTEND = 'http://192.168.0.155:4000';
+export const SUPPORTED_IMAGE_EXTENSIONS = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+export const SERVER_FRONTEND = 'http://localhost:4000';
