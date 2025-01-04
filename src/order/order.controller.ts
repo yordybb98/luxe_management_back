@@ -59,6 +59,7 @@ import { join } from 'path';
 import { NotificationService } from 'src/notification/notification.service';
 import { Public } from '../common/guards/public.guard';
 const path = require('path');
+import * as fs from 'fs';
 
 @ApiTags('Order')
 @Controller('order')
@@ -915,6 +916,7 @@ export class OrderController {
       const order = await this.getOrderById(orderId, req);
 
       const finalArtPath = join(order.normalizedOrder.directory, 'Arte Final');
+      const previewDir = join(order.normalizedOrder.directory, 'Preview');
       const files = await this.imageService.getImagesFromFolder(finalArtPath);
 
       //checking if order exists
@@ -942,14 +944,31 @@ export class OrderController {
         );
       } */
 
+      // **Delete previous images from 'Preview' directory**
+      if (fs.existsSync(previewDir)) {
+        fs.readdirSync(previewDir).forEach((file) => {
+          const filePath = join(previewDir, file);
+          if (fs.lstatSync(filePath).isFile()) {
+            fs.unlinkSync(filePath);
+          }
+        });
+      }
+
       //Saving original and resizedWaterMark images
       const filePaths = await Promise.all(
-        files.map((file) =>
-          this.imageService.resizeAndSaveImage(
-            file,
-            order.normalizedOrder.directory,
-          ),
-        ),
+        files.map(async (file) => {
+          try {
+            return await this.imageService.resizeAndSaveImage(
+              file,
+              order.normalizedOrder.directory,
+            );
+          } catch (error) {
+            console.error(`Error processing image: ${file}`, error);
+            throw new BadRequestException(
+              `Failed to process image "${file.originalname}". Reason: ${error.message}`,
+            );
+          }
+        }),
       );
 
       console.log(`Proposal uploaded SUCCESSfully to`, { filePaths });
@@ -971,9 +990,9 @@ export class OrderController {
 
       console.log('UPLOADING PROPOSAL FINISHED');
       console.log('----------------------------');
-    } catch (err) {
+    } catch (err: any) {
       console.error({ err });
-      throw new NotFoundException(err);
+      throw new NotFoundException(err.message);
     }
   }
 
