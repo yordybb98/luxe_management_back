@@ -12,6 +12,7 @@ import {
   Query,
   Request,
   UseInterceptors,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
@@ -168,6 +169,10 @@ export class OrderController {
 
       orders = data;
       totalOrders = total;
+    } else {
+      throw new UnauthorizedException(
+        'You do not have permission to view all orders.',
+      );
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
