@@ -36,7 +36,7 @@ export const STAGES_IDS = {
 };
 
 // ODOO STAGE FIELD ID
-export const STAGE_FIELD_ID = 9133;
+export const STAGE_FIELD_ID = 9133; // ID of the message related to stage field
 
 export const STAGESIDSALLOWEDTODOAPROPOSAL = [
   STAGES_IDS.DESIGN, //Design
