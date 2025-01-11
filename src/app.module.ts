@@ -7,6 +7,7 @@ import { CommonModule } from './common/common.module';
 import { ImageModule } from './images/image.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { NotificationModule } from './notification/notification.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     OrderModule,
@@ -21,6 +22,7 @@ import { NotificationModule } from './notification/notification.module';
     ImageModule,
     GatewayModule,
     NotificationModule,
+    ScheduleModule.forRoot(),
   ],
   controllers: [],
   providers: [],

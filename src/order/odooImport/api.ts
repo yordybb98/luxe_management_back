@@ -1,3 +1,4 @@
+import { STAGES_IDS } from 'settings.config';
 import { OdooOrder } from 'src/common/types/order';
 import {
   filterStageTransitions,
@@ -428,17 +429,6 @@ const getOrderOdooStageDurations = async (
 
     const durationMs = Math.abs(nextTime.getTime() - startTime.getTime());
 
-    if (current.id == 49315) {
-      console.log('STAGE', current.field_id);
-    }
-
-    if (current.id == 55122) {
-      console.log('FIELD', current.field_id);
-    }
-
-    if (current.id == 50827) {
-      console.log('STAGE', current.field_id);
-    }
     stages.push({
       stage: current.new_value_char || 'Unknown',
       duration: durationMs,
@@ -552,6 +542,91 @@ const getOrderOdooStageTimeline = async (
   return timeline;
 };
 
+const getOrderStageTimeStamp = async (orderId: number) => {
+  const uid = await authenticateFromOdoo();
+
+  // Step 1: Fetch related messages for the order
+  const messageIds = await new Promise<number[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.message',
+        'search_read',
+        [
+          [
+            ['res_id', '=', orderId],
+            ['model', '=', 'crm.lead'], // Adjust the model as needed
+          ],
+          ['id'],
+        ],
+      ],
+      (err, messages) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(messages.map((m) => m.id));
+      },
+    );
+  });
+
+  const trackingValues = await new Promise<any[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'mail.tracking.value',
+        'search_read',
+        [
+          [['mail_message_id', 'in', messageIds]],
+          ['create_date', 'field_id', 'old_value_char', 'new_value_char'],
+        ],
+      ],
+      (err, values) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(values);
+      },
+    );
+  });
+
+  const relevantChanges = filterStageTransitions(trackingValues);
+
+  return relevantChanges;
+};
+
+export const getOrdersByStages = async (stageIds: number[]) => {
+  const uid = await authenticateFromOdoo();
+
+  const result = await new Promise<any[]>((resolve, reject) => {
+    modelsClient.methodCall(
+      'execute_kw',
+      [
+        db,
+        uid,
+        password,
+        'crm.lead',
+        'search_read',
+        [[['stage_id', 'in', stageIds]]],
+        { fields: ['id', 'stage_id'] },
+      ],
+      (err, values) => {
+        if (err) {
+          return reject(err);
+        }
+        resolve(values);
+      },
+    );
+  });
+
+  return result;
+};
+
 export {
   authenticateFromOdoo,
   getOdooVersion,
@@ -566,4 +641,5 @@ export {
   getOdooTeams,
   getOrderOdooStageDurations,
   getOrderOdooStageTimeline,
+  getOrderStageTimeStamp,
 };
