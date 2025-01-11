@@ -22,8 +22,9 @@ export class AuthService {
   ) {}
 
   async signIn(username: string, pass: string): Promise<SignInResponseDto> {
+    const normalizedUser = username.toLowerCase();
     //checking if user exists
-    const user = await this.usersService.getUserByUsername(username);
+    const user = await this.usersService.getUserByUsername(normalizedUser);
     if (!user) {
       throw new UnauthorizedException('Wrong credentials');
     }

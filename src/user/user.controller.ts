@@ -99,6 +99,10 @@ export class UserController {
       throw new BadRequestException('Username already in use');
     }
 
+    //Normalizing data
+    data.username = data.username.trim().toLowerCase();
+    data.email = data.email.trim().toLowerCase();
+
     //cheking if roleExists
     const roleExists = await this.roleService.getRoleById(data.roleId);
     if (!roleExists) {
