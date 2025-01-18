@@ -1,5 +1,6 @@
 import { Permission, PrismaClient, UserType } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
+import { exit } from 'process';
 
 const prisma = new PrismaClient();
 
@@ -121,4 +122,6 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
+    console.log('Completed!!!');
+    exit();
   });
