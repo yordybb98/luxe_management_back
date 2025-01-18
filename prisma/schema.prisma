@@ -4,9 +4,6 @@
 enum Permission {
   ViewOrders
   ViewAllOrders
-  CreateOrders
-  UpdateOrders
-  DeleteOrders
   AssignTechnician
   AssignDesigner
   FinishOrders

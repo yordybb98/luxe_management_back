@@ -786,16 +786,6 @@ export class OrderController {
     return tasks;
   }
 
-  @Post()
-  @Permissions(Permission.CreateOrders)
-  async createOrder(@Body() data: CreateOrderDto) /* : Promise<Order> */ {
-    /* //checking if user exists
-    const user = await this.usersService.getUserById(data.userId);
-    if (!user) throw new BadRequestException('User not found');
-
-    return this.orderService.createOrder(data); */
-  }
-
   @Post('assignDesigner')
   @Permissions(Permission.AssignDesigner)
   async assignDesigner(
@@ -1209,29 +1199,6 @@ export class OrderController {
       console.error({ err });
       throw new NotFoundException(err);
     }
-  }
-
-  @Patch(':id')
-  @Permissions(Permission.UpdateOrders)
-  async updateOrder(
-    @Param('id') id: string,
-    @Body() data: Order,
-  ) /* : Promise<Order>  */ {
-    /*  try {
-      return await this.orderService.updateOrder(Number(id), data);
-    } catch (err) {
-      throw new NotFoundException("Order doesn't exist");
-    } */
-  }
-
-  @Delete(':id')
-  @Permissions(Permission.DeleteOrders)
-  async deleteOrder(@Param('id') id: string) /* : Promise<Order> */ {
-    /* try {
-      return await this.orderService.deleteOrder(Number(id));
-    } catch (err) {
-      throw new NotFoundException("Order doesn't exist");
-    } */
   }
 
   @Post(':orderId/createDirectory')
