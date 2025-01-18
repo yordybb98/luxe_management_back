@@ -1,4 +1,4 @@
-import { STAGES_IDS } from 'settings.config';
+import { UnauthorizedException } from '@nestjs/common';
 import { OdooOrder } from 'src/common/types/order';
 import {
   filterStageTransitions,
@@ -323,8 +323,12 @@ const searchOdooOrder = async (
 
     return { data: orders, total };
   } catch (err) {
-    console.error('Error fetching orders:', err);
-    return { data: [], total: 0 };
+    const errorMessage = (err.message || '') as string;
+    if (errorMessage.includes('Access Denied'))
+      throw new UnauthorizedException(
+        'Odoo Access Denied. Please contact admin.',
+      );
+    throw new Error(err);
   }
 };
 

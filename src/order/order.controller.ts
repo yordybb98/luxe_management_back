@@ -87,6 +87,12 @@ export class OrderController {
     @Query('order') order,
   ): Promise<GetAllOrdersResponseDto> {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+    console.log('-------------------');
+    console.log('GETTING ALL ORDERS');
+    console.log('USER REQUESTED: ', userLoggedIn.username);
+    console.log('-------------------');
+
     //Creating combined domain to filter orders
     const combinedDomain = [];
     // Filtering orders based on designerId param
@@ -159,16 +165,20 @@ export class OrderController {
       Permission.ViewAllOrders,
     );
     if (canViewAllOrders) {
-      const { data, total } = await searchOdooOrder(
-        UID,
-        combinedDomain,
-        page,
-        pageSize,
-        order,
-      );
+      try {
+        const { data, total } = await searchOdooOrder(
+          UID,
+          combinedDomain,
+          page,
+          pageSize,
+          order,
+        );
 
-      orders = data;
-      totalOrders = total;
+        orders = data;
+        totalOrders = total;
+      } catch (error) {
+        throw error;
+      }
     } else {
       throw new UnauthorizedException(
         'You do not have permission to view all orders.',
@@ -316,15 +326,18 @@ export class OrderController {
         ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
         ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
       );
-
-      const { data, total } = await searchOdooOrder(
-        UID,
-        combinedDomain,
-        page,
-        pageSize,
-      );
-      orders = data;
-      totalOrders = total;
+      try {
+        const { data, total } = await searchOdooOrder(
+          UID,
+          combinedDomain,
+          page,
+          pageSize,
+        );
+        orders = data;
+        totalOrders = total;
+      } catch (error) {
+        console.log('ERROOOOOOOOOO');
+      }
     }
 
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
