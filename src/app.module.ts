@@ -8,6 +8,7 @@ import { ImageModule } from './images/image.module';
 import { GatewayModule } from './gateway/gateway.module';
 import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { OdooModule } from './odoo/odoo.module';
 @Module({
   imports: [
     OrderModule,
@@ -23,6 +24,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     GatewayModule,
     NotificationModule,
     ScheduleModule.forRoot(),
+    OdooModule,
   ],
   controllers: [],
   providers: [],

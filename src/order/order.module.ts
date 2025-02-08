@@ -20,5 +20,6 @@ import { NotificationModule } from 'src/notification/notification.module';
     RoleService,
   ],
   imports: [PrismaModule, NotificationModule],
+  exports: [OrderService],
 })
 export class OrderModule {}
