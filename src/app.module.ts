@@ -9,6 +9,8 @@ import { GatewayModule } from './gateway/gateway.module';
 import { NotificationModule } from './notification/notification.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { OdooModule } from './odoo/odoo.module';
+import { TimeService } from './time/time.service';
+import { TimeModule } from './time/time.module';
 @Module({
   imports: [
     OrderModule,
@@ -25,8 +27,9 @@ import { OdooModule } from './odoo/odoo.module';
     NotificationModule,
     ScheduleModule.forRoot(),
     OdooModule,
+    TimeModule,
   ],
   controllers: [],
-  providers: [],
+  providers: [TimeService],
 })
 export class AppModule {}
