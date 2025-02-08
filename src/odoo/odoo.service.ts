@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { TimeService } from 'src/time/time.service';
 
 const xmlrpc = require('xmlrpc');
 
@@ -16,6 +17,8 @@ export class OdooService {
   modelsClient = xmlrpc.createClient({
     url: `${this.url}/xmlrpc/2/object`,
   });
+
+  constructor(private readonly timeService: TimeService) {}
 
   getVersion = () => {
     return new Promise((resolve, reject) => {
@@ -54,6 +57,8 @@ export class OdooService {
     checkOut: string,
   ): Promise<any> => {
     try {
+      const checkInUTC = await this.timeService.odooUTC(checkIn);
+      const checkOutUTC = await this.timeService.odooUTC(checkOut);
       const record = await new Promise((resolve, reject) => {
         this.modelsClient.methodCall(
           'execute_kw', // Odoo method name
@@ -66,8 +71,8 @@ export class OdooService {
             [
               {
                 employee_id: employeeId, // Employee ID
-                check_in: checkIn, // Check-in time (string in format: 'YYYY-MM-DD HH:MM:SS')
-                check_out: checkOut, // Check-out time (string in format: 'YYYY-MM-DD HH:MM:SS')
+                check_in: checkInUTC, // Check-in time (string in format: 'YYYY-MM-DD HH:MM:SS')
+                check_out: checkOutUTC, // Check-out time (string in format: 'YYYY-MM-DD HH:MM:SS')
               },
             ],
           ],
@@ -86,6 +91,41 @@ export class OdooService {
       console.error('Error creating Odoo attendance:', err);
     }
     return {}; // Return empty object in case of error
+  };
+
+  createOdooAttendanceBatch = async (
+    uid: number,
+    records: any[],
+  ): Promise<any> => {
+    try {
+      if (records.length === 0) return { message: 'No records to insert' };
+
+      console.log(`Inserting ${records.length} attendance records...`);
+
+      // Bulk insert using `execute_kw`
+      const createdRecords = await new Promise((resolve, reject) => {
+        this.modelsClient.methodCall(
+          'execute_kw',
+          [
+            this.db,
+            uid,
+            this.password,
+            'hr.attendance',
+            'create',
+            [records], // Batch insertion in a single request
+          ],
+          (err: any, result: any) => {
+            if (err) reject(err);
+            else resolve(result);
+          },
+        );
+      });
+
+      return createdRecords;
+    } catch (err) {
+      console.error('Error creating batch Odoo attendance:', err);
+      return { error: err };
+    }
   };
 
   getEmployees = async (uid: number): Promise<any[]> => {
@@ -115,6 +155,44 @@ export class OdooService {
     } catch (err) {
       console.error('Error getting Odoo employees:', err);
       return [];
+    }
+  };
+
+  getEmployeeIdsByNames = async (
+    uid: number,
+    employeeNames: string[],
+  ): Promise<Record<string, number>> => {
+    try {
+      // Fetch employee records by name
+      const employees = await new Promise<any[]>((resolve, reject) => {
+        this.modelsClient.methodCall(
+          'execute_kw',
+          [
+            this.db,
+            uid,
+            this.password,
+            'hr.employee',
+            'search_read',
+            [[['name', 'in', employeeNames]]], // Search employees by name
+            { fields: ['id', 'name'] }, // Fetch only ID and name
+          ],
+          (err: any, result: any) => {
+            if (err) reject(err);
+            else resolve(result);
+          },
+        );
+      });
+
+      // Map employee names to IDs
+      const employeeMap: Record<string, number> = {};
+      employees.forEach((emp) => {
+        employeeMap[emp.name] = emp.id;
+      });
+
+      return employeeMap;
+    } catch (err) {
+      console.error('Error fetching employee IDs:', err);
+      return {};
     }
   };
 }

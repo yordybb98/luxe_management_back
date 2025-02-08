@@ -1,11 +1,10 @@
 import { Module } from '@nestjs/common';
 import { OdooService } from './odoo.service';
 import { OdooController } from './odoo.controller';
-import { OrderModule } from 'src/order/order.module';
+import { TimeService } from 'src/time/time.service';
 
 @Module({
   controllers: [OdooController],
-  providers: [OdooService],
-  //imports: [OrderModule],
+  providers: [OdooService, TimeService],
 })
 export class OdooModule {}

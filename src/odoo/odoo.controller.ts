@@ -1,11 +1,16 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { OdooService } from './odoo.service';
 import { Public } from 'src/common/guards/public.guard';
+import { Attendance } from 'src/common/types/attendance';
+import { TimeService } from 'src/time/time.service';
 
 @Public()
 @Controller('odoo')
 export class OdooController {
-  constructor(private readonly odooService: OdooService) {}
+  constructor(
+    private readonly odooService: OdooService,
+    private readonly timeService: TimeService,
+  ) {}
 
   @Get()
   async getVersion() {
@@ -26,19 +31,53 @@ export class OdooController {
   }
 
   @Post('attendance')
-  async attendance(@Body() data: any) {
+  async attendance(@Body() data: Attendance[]) {
     const uid = await this.odooService.authenticate();
 
-    const employee_id = 1;
-    const checkIn = '';
-    const checkOut = '';
+    if (!data || data.length === 0) {
+      return { message: 'No attendance entries provided.' };
+    }
 
-    const result = await this.odooService.createOdooAttendance(
+    // Extract unique employee names from the request
+    const employeeNames = [...new Set(data.map((entry) => entry.user))];
+
+    // Get employee IDs from Odoo
+    const employeeMap = await this.odooService.getEmployeeIdsByNames(
       uid,
-      employee_id,
-      checkIn,
-      checkOut,
+      employeeNames,
     );
-    return { result };
+
+    // Transform entries to include employee_id
+    const batchRecords = await Promise.all(
+      data.map(async (entry) => {
+        const employeeId = employeeMap[entry.user]; // Get employee ID from map
+        if (!employeeId) {
+          console.warn(`Employee not found: ${entry.user}`);
+          return null;
+        }
+
+        return {
+          employee_id: employeeId,
+          check_in: await this.timeService.odooUTC(entry.in),
+          ...(entry.out !== 'N/A' && {
+            check_out: await this.timeService.odooUTC(entry.out),
+          }),
+        };
+      }),
+    );
+
+    // Remove null values (entries with missing employee IDs)
+    const validRecords = batchRecords.filter((record) => record !== null);
+
+    if (validRecords.length === 0) {
+      return { message: 'No valid attendance records found.' };
+    }
+
+    // Insert attendance records in bulk
+    const result = await this.odooService.createOdooAttendanceBatch(
+      uid,
+      validRecords,
+    );
+    return { success: true, result };
   }
 }

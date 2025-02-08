@@ -15,7 +15,11 @@ async function bootstrap() {
     origin: (origin, callback) => {
       if (
         !origin ||
-        ['http://localhost:3000', 'http://localhost:4000'].includes(origin)
+        [
+          'http://localhost:3000',
+          'http://localhost:4000',
+          'http://localhost:3005',
+        ].includes(origin)
       ) {
         callback(null, true);
       } else {
