@@ -19,6 +19,7 @@ enum Permission {
   CreateUsers
   UpdateUsers
   DeleteUsers
+  ViewAttendances
 }
 
 enum NotificationType {

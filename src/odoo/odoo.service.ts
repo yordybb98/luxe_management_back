@@ -123,8 +123,9 @@ export class OdooService {
 
       return createdRecords;
     } catch (err) {
-      console.error('Error creating batch Odoo attendance:', err);
-      return { error: err };
+      const errorMessage = err.faultString;
+      console.error('Error creating batch Odoo attendance:', errorMessage);
+      return { error: errorMessage };
     }
   };
 

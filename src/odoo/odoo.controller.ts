@@ -74,10 +74,15 @@ export class OdooController {
     }
 
     // Insert attendance records in bulk
-    const result = await this.odooService.createOdooAttendanceBatch(
-      uid,
-      validRecords,
-    );
-    return { success: true, result };
+    try {
+      const result = await this.odooService.createOdooAttendanceBatch(
+        uid,
+        validRecords,
+      );
+      if (result.error) return { success: false, error: result.error };
+      return { success: true, result };
+    } catch (error) {
+      return { success: false, error };
+    }
   }
 }
