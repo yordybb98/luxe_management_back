@@ -138,7 +138,7 @@ export class UserController {
 
       //Notifying admin
       this.notificationService.notifyUser(req.user.sub, {
-        message: `User ${data.name} updated successfully`,
+        message: `User ${updatedUser.name} updated successfully`,
         type: 'SUCCESS',
       });
       return updatedUser;

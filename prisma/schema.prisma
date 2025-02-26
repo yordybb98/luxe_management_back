@@ -62,6 +62,7 @@ model User {
   address       String?
   notifications Notification[]
   userType      UserType?
+  disabled      Boolean        @default(false)
 }
 
 model Role {
