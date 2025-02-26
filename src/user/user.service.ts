@@ -156,6 +156,7 @@ export class UserService {
     return this.prisma.user.findMany({
       where: {
         userType: UserType.TECHNICIAN,
+        disabled: false,
       },
       include: {
         role: true,
@@ -167,6 +168,7 @@ export class UserService {
     return this.prisma.user.findMany({
       where: {
         userType: UserType.DESIGNER,
+        disabled: false,
       },
       include: {
         role: true,
