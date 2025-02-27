@@ -3,6 +3,12 @@ import { User, UserType } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from './dto/createUserDto';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
+import {
+  authenticateFromOdoo,
+  searchOdooOrder,
+} from 'src/order/odooImport/api';
+import { Order } from 'src/common/types/order';
+import { normalizeOrder } from 'src/order/odooImport/normalizations';
 
 @Injectable()
 export class UserService {
@@ -174,5 +180,48 @@ export class UserService {
         role: true,
       },
     });
+  }
+
+  async havePendingTasks(
+    userId: number,
+  ): Promise<{ canBeDeactivated: boolean; data: Order[] }> {
+    try {
+      const UID = await authenticateFromOdoo();
+
+      // Dominio para filtrar tanto diseñadores como técnicos
+      const combinedDomain = [
+        ['company_id', '=', 1],
+        '|',
+        ['x_studio_designers_assigned', '=', `[${userId}]`], // Exact match
+        '|',
+        ['x_studio_designers_assigned', 'like', `[${userId},`], // Starts with
+        '|',
+        ['x_studio_designers_assigned', 'like', `,${userId},`], // Middle occurrence
+        '|',
+        ['x_studio_designers_assigned', 'like', `,${userId}]`], // Ends with
+        '|',
+        ['x_studio_technicians_assigned', '=', `[${userId}]`],
+        '|',
+        ['x_studio_technicians_assigned', 'like', `[${userId},`],
+        '|',
+        ['x_studio_technicians_assigned', 'like', `,${userId},`],
+        ['x_studio_technicians_assigned', 'like', `,${userId}]`],
+      ];
+
+      // Usar search_count para eficiencia
+      const { data, total: totalTasks } = await searchOdooOrder(
+        UID,
+        combinedDomain,
+      );
+
+      const normalizedOrders = data?.map((order) => normalizeOrder(order));
+
+      return {
+        canBeDeactivated: totalTasks === 0,
+        data: normalizedOrders,
+      };
+    } catch (err) {
+      throw new Error(err);
+    }
   }
 }

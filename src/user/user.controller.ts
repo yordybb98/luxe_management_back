@@ -23,6 +23,7 @@ import { Permissions } from 'src/common/decorators/permissions.decorators';
 import { UserResponseDto } from './dto/getAllUsersResponseDto';
 import { ChangePasswordDto } from './dto/changePasswordDto';
 import { NotificationService } from 'src/notification/notification.service';
+import { Order } from 'src/common/types/order';
 
 @ApiTags('User')
 @Controller('users')
@@ -147,6 +148,56 @@ export class UserController {
     }
   }
 
+  @Patch(':id/activate')
+  @Permissions(Permission.UpdateUsers)
+  async activateUser(
+    @Param('id') id: string,
+    @Body() data: User,
+    @Request() req,
+  ): Promise<User> {
+    try {
+      //Updating user
+      const updatedUser = await this.userService.updateUser(Number(id), {
+        ...data,
+        disabled: false,
+      });
+
+      //Notifying admin
+      this.notificationService.notifyUser(req.user.sub, {
+        message: `User ${updatedUser.name} activated successfully`,
+        type: 'SUCCESS',
+      });
+      return updatedUser;
+    } catch (err) {
+      throw new NotFoundException("User doesn't exist");
+    }
+  }
+
+  @Patch(':id/deactivate')
+  @Permissions(Permission.UpdateUsers)
+  async deactivateUser(
+    @Param('id') id: string,
+    @Body() data: User,
+    @Request() req,
+  ): Promise<User> {
+    try {
+      //Updating user
+      const updatedUser = await this.userService.updateUser(Number(id), {
+        ...data,
+        disabled: true,
+      });
+
+      //Notifying admin
+      this.notificationService.notifyUser(req.user.sub, {
+        message: `User ${updatedUser.name} deactivated successfully`,
+        type: 'SUCCESS',
+      });
+      return updatedUser;
+    } catch (err) {
+      throw new NotFoundException("User doesn't exist");
+    }
+  }
+
   @Patch(':id/password')
   @Permissions(Permission.UpdateUsers)
   async changePassword(
@@ -184,5 +235,13 @@ export class UserController {
     } catch (err) {
       throw new NotFoundException("User doesn't exist");
     }
+  }
+
+  @Post(':id/can-be-deactivated')
+  async canBeDeactivated(
+    @Param('id') id: number,
+  ): Promise<{ canBeDeactivated: boolean; data: Order[] }> {
+    const result = await this.userService.havePendingTasks(id);
+    return result;
   }
 }
