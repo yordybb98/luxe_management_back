@@ -35,6 +35,11 @@ export class AuthService {
       throw new UnauthorizedException('Wrong credentials');
     }
 
+    //checking if user is active
+    if (user.disabled) {
+      throw new UnauthorizedException('User is disabled');
+    }
+
     //removing password from response
     const { password, ...result } = user;
 
