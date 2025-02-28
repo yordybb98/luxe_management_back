@@ -28,6 +28,26 @@ export class RoleService {
   }
 
   async removeRole(id: number) {
-    return await this.prisma.role.delete({ where: { id } });
+    const { haveUsers, totalUsers } = await this.haveUsers(id);
+    if (haveUsers)
+      throw new Error(
+        `This role cannot be deleted because it has ${totalUsers} users`,
+      );
+    else return await this.prisma.role.delete({ where: { id } });
+  }
+
+  async haveUsers(
+    id: number,
+  ): Promise<{ haveUsers: boolean; totalUsers: number }> {
+    const role = await this.prisma.role.findUnique({
+      where: { id },
+      select: {
+        _count: { select: { users: true } },
+      },
+    });
+
+    const totalUsers = role?._count?.users;
+
+    return { haveUsers: totalUsers > 0, totalUsers };
   }
 }

@@ -6,6 +6,7 @@ import {
   Patch,
   Param,
   Delete,
+  ConflictException,
 } from '@nestjs/common';
 import { RoleService } from './role.service';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -13,6 +14,7 @@ import { UpdateRoleDto } from './dto/update-role.dto';
 import { ApiTags } from '@nestjs/swagger';
 import { Permission } from '@prisma/client';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
+import { Public } from 'src/common/guards/public.guard';
 
 @ApiTags('Role')
 @Controller('role')
@@ -45,7 +47,11 @@ export class RoleController {
 
   @Delete(':id')
   @Permissions(Permission.DeleteRoles)
-  removeRole(@Param('id') id: string) {
-    return this.roleService.removeRole(+id);
+  async removeRole(@Param('id') id: string) {
+    try {
+      return await this.roleService.removeRole(+id);
+    } catch (error) {
+      throw new ConflictException(error.message);
+    }
   }
 }
