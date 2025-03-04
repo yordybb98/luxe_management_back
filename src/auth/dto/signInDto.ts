@@ -1,3 +1,4 @@
+import { ApiProperty } from '@nestjs/swagger';
 import { UserType } from '@prisma/client';
 import { Transform } from 'class-transformer';
 import {
@@ -13,11 +14,13 @@ export class SignInDto {
   @IsString()
   @Transform(({ value }) => value.trim())
   @MinLength(3)
+  @ApiProperty({ example: 'john.doe', description: 'User email' })
   username: string;
 
   @IsString()
   @Transform(({ value }) => value.trim())
   @MinLength(1)
+  @ApiProperty({ example: 'strongPassword123', description: 'User password' })
   password: string;
 }
 

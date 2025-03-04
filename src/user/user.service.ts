@@ -209,10 +209,10 @@ export class UserService {
       ];
 
       // Usar search_count para eficiencia
-      const { data, total: totalTasks } = await searchOdooOrder(
-        UID,
-        combinedDomain,
-      );
+      const { data, total: totalTasks } = await searchOdooOrder({
+        uid: UID,
+        dynamicDomain: combinedDomain,
+      });
 
       const normalizedOrders = data?.map((order) => normalizeOrder(order));
 

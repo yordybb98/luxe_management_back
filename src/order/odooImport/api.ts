@@ -268,16 +268,23 @@ const updateOdooOrder = async (
   }
 };
 
-const searchOdooOrder = async (
+const searchOdooOrder = async ({
   uid,
-  dynamicDomain: any[] = [],
-  page: number = 1,
-  limit: number = 5,
-  order: string = 'create_date DESC',
-): Promise<{ data: OdooOrder[]; total: number }> => {
+  dynamicDomain = [],
+  page = 1,
+  limit = 5,
+  order = 'create_date DESC',
+  withoutPagination = false,
+}: {
+  uid: number;
+  dynamicDomain?: any[];
+  page?: number;
+  limit?: number;
+  order?: string;
+  withoutPagination?: boolean;
+}): Promise<{ data: OdooOrder[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
-
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -288,7 +295,7 @@ const searchOdooOrder = async (
           'crm.lead', // Model
           'search_read', // Method (search_read)
           [dynamicDomain], // Dynamic domain filter
-          { offset, limit, order }, // Dynamic fields
+          withoutPagination ? { order } : { offset, limit, order }, // Dynamic fields
         ],
         (err, orders) => {
           if (err) {

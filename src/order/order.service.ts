@@ -1,38 +1,319 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from 'src/common/types/order';
 import { UserService } from 'src/user/user.service';
-import { User } from '@prisma/client';
-/* import { Cron } from '@nestjs/schedule';
-import {
-  getOrderOdooStageDurations,
-  getOrdersByStages,
-  getOrderStageTimeStamp,
-} from './odooImport/api'; */
-import { formatDuration } from 'src/utils/utils';
-import { NotificationService } from 'src/notification/notification.service';
+import { Permission, User, UserType } from '@prisma/client';
 import { STAGES_IDS } from 'settings.config';
+import { authenticateFromOdoo, searchOdooOrder } from './odooImport/api';
+import { normalizeOrder } from './odooImport/normalizations';
+import { PayloadToken } from 'src/common/types/payload';
 
 @Injectable()
 export class OrderService {
-  constructor(
-    private usersService: UserService,
-    //private notificationService: NotificationService,
-  ) {}
+  constructor(private usersService: UserService) {}
 
-  // private readonly stageTimeLimits: Record<number, number> = {
-  //   [STAGES_IDS.PRODUCTION]: 60000, // 1 hour
-  //   [STAGES_IDS.DESIGN]: 180, // 3 hours
-  //   [STAGES_IDS.PROPOSITION]: 1440, // 1 day
-  // };
+  async getAllOrders({
+    designerId,
+    technicianId,
+    search,
+    stageId,
+    page = 1,
+    pageSize = 5,
+    order = 'create_date DESC',
+    userLoggedIn,
+  }: {
+    designerId?: string;
+    technicianId?: string;
+    search?: string;
+    stageId?: string;
+    page?: number;
+    pageSize?: number;
+    order?: string;
+    userLoggedIn: PayloadToken;
+  }): Promise<{ allOrders: Order[]; total: number }> {
+    //Creating combined domain to filter orders
+    const combinedDomain = [];
+    // Filtering orders based on designerId param
+    if (designerId) {
+      if (designerId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_designers_assigned', '=', false], // Check for null/undefined
+          ['x_studio_designers_assigned', '=', []], // Check for an empty array
+          ['x_studio_designers_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push(
+          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
+        );
+      }
+    }
 
-  /*   onModuleInit() {
-    this.trackOrderStages(); // Run once at startup
-  } */
+    // Filtering orders based on technicianId param
+    if (technicianId) {
+      if (technicianId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_technicians_assigned', '=', false], // Check for null/undefined
+          ['x_studio_technicians_assigned', '=', []], // Check for an empty array
+          ['x_studio_technicians_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push([
+          'x_studio_technicians_assigned',
+          'ilike',
+          technicianId,
+        ]);
+      }
+    }
 
-  async getAllOrders(): Promise<Order[]> {
-    return [];
+    // Filtering orders based on search param
+    if (search) {
+      // Searching by phone
+      combinedDomain.push('|', ['phone_sanitized', 'ilike', search]);
+
+      // Searching by client name
+      combinedDomain.push('|', ['partner_id', 'ilike', search]);
+
+      // Searching by name or description
+      combinedDomain.push(
+        '|',
+        ['name', 'ilike', search],
+        ['x_studio_order_description', 'ilike', search],
+      );
+    }
+
+    // Filtering orders based on stageId param
+    if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
+
+    //Filtering only Luxe Graphics orders
+    combinedDomain.push(['company_id', '=', 1]);
+
+    let orders = [];
+    let totalOrders = 0;
+
+    //Authenticating Odoo
+    const UID = await authenticateFromOdoo();
+
+    //Getting orders from odoo based on user role
+    const currentUserType = userLoggedIn.userType;
+    const canViewAllOrders = userLoggedIn.role.permissions.includes(
+      Permission.ViewAllOrders,
+    );
+
+    if (canViewAllOrders) {
+      try {
+        const { data, total } = await searchOdooOrder({
+          uid: UID,
+          dynamicDomain: combinedDomain,
+          page,
+          limit: pageSize,
+          order,
+        });
+
+        orders = data;
+        totalOrders = total;
+      } catch (error) {
+        throw error;
+      }
+    } else {
+      throw new UnauthorizedException(
+        'You do not have permission to view all orders.',
+      );
+    }
+
+    const normalizedOrders = orders.map((order) => normalizeOrder(order));
+
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (currentUserType === UserType.TECHNICIAN) {
+      normalizedOrders.forEach((order) => {
+        order.tasks = order.tasks.filter(
+          (task) =>
+            task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
+        );
+      });
+    }
+
+    const getOrdersWithTechnicians =
+      await this.getOrdersWithTechnicians(normalizedOrders);
+
+    const ordersWithDesigners = await this.getOrdersWithDesigners(
+      getOrdersWithTechnicians,
+    );
+
+    return {
+      allOrders: ordersWithDesigners,
+      total: totalOrders,
+    };
+  }
+
+  async getMyOrders({
+    designerId,
+    technicianId,
+    search,
+    stageId,
+    page,
+    pageSize,
+    userLoggedIn,
+    withoutPagination,
+  }: {
+    designerId?: string;
+    technicianId?: string;
+    search?: string;
+    stageId?: string;
+    page?: number;
+    pageSize?: number;
+    order?: string;
+    userLoggedIn: PayloadToken;
+    withoutPagination?: boolean;
+  }): Promise<{ myOrders: Order[]; total: number }> {
+    //Creating combined domain to filter orders
+    const combinedDomain = [];
+
+    // Filtering orders based on designerId param
+    if (designerId) {
+      if (designerId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_designers_assigned', '=', false], // Check for null/undefined
+          ['x_studio_designers_assigned', '=', []], // Check for an empty array
+          ['x_studio_designers_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push(
+          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
+        );
+      }
+    }
+
+    // Filtering orders based on technicianId param
+    if (technicianId) {
+      if (technicianId === '0') {
+        combinedDomain.push(
+          '|',
+          '|',
+          ['x_studio_technicians_assigned', '=', false], // Check for null/undefined
+          ['x_studio_technicians_assigned', '=', []], // Check for an empty array
+          ['x_studio_technicians_assigned', '=', '[]'], // Check for an empty array as string
+        );
+      } else {
+        combinedDomain.push([
+          'x_studio_technicians_assigned',
+          'ilike',
+          technicianId,
+        ]);
+      }
+    }
+
+    // Filtering orders based on search param
+    if (search) {
+      // Searching by phone
+      combinedDomain.push('|', ['phone_sanitized', 'ilike', search]);
+
+      // Searching by client name
+      combinedDomain.push('|', ['partner_id', 'ilike', search]);
+
+      // Searching by name or description
+      combinedDomain.push(
+        '|',
+        ['name', 'ilike', search],
+        ['x_studio_order_description', 'ilike', search],
+      );
+    }
+
+    // Filtering orders based on stageId param
+    if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
+
+    //Filtering only Luxe Graphics orders
+    combinedDomain.push(['company_id', '=', 1]);
+
+    let orders = [];
+    let totalOrders = 0;
+
+    //Authenticating Odoo
+    const UID = await authenticateFromOdoo();
+
+    //Getting orders from odoo based on user type
+    const currentUserType = userLoggedIn.userType;
+
+    combinedDomain.push(['stage_id', '!=', STAGES_IDS.ON_HOLD]);
+    if (currentUserType === UserType.DESIGNER) {
+      // Filtering orders based on designerRole
+
+      //Searching the exact value to avoid partial matches like 1 or 10 or 111
+      combinedDomain.push(
+        '|', // OR logic
+        ['x_studio_designers_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
+        '|', // Additional OR logic
+        ['x_studio_designers_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
+        '|',
+        ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+        ['x_studio_designers_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+      );
+
+      const { data, total } = await searchOdooOrder({
+        uid: UID,
+        dynamicDomain: combinedDomain,
+        page,
+        limit: pageSize,
+        order: 'x_studio_designer_date_assignment DESC',
+        withoutPagination,
+      });
+      orders = data;
+      totalOrders = total;
+    } else if (currentUserType === UserType.TECHNICIAN) {
+      //Filtering orders based on technician Role
+
+      //Searching the exact value to avoid partial matches like 1 or 10 or 111
+      combinedDomain.push(
+        '|', // OR logic
+        ['x_studio_technicians_assigned', '=', `[${userLoggedIn.sub}]`], // Exact match for a single value
+        '|', // Additional OR logic
+        ['x_studio_technicians_assigned', 'like', `[${userLoggedIn.sub},%`], // Check if starts with [9,
+        '|',
+        ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub},%`], // Check for middle occurrences
+        ['x_studio_technicians_assigned', 'like', `,%${userLoggedIn.sub}]`], // Check if ends with ,9]);
+      );
+      try {
+        const { data, total } = await searchOdooOrder({
+          uid: UID,
+          dynamicDomain: combinedDomain,
+          page,
+          limit: pageSize,
+          withoutPagination,
+        });
+        orders = data;
+        totalOrders = total;
+      } catch (error) {
+        console.log('ERROOOOOOOOOO');
+        console.log({ error });
+      }
+    }
+
+    const normalizedOrders = orders.map((order) => normalizeOrder(order));
+
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (currentUserType === UserType.TECHNICIAN) {
+      normalizedOrders.forEach((order) => {
+        order.tasks = order.tasks.filter(
+          (task) =>
+            task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
+        );
+      });
+    }
+
+    const getOrdersWithTechnicians =
+      await this.getOrdersWithTechnicians(normalizedOrders);
+
+    const ordersWithDesigners = await this.getOrdersWithDesigners(
+      getOrdersWithTechnicians,
+    );
+
+    return { myOrders: ordersWithDesigners, total: totalOrders };
   }
 
   async getOrdersByUserId(id: number): Promise<Order[]> {

@@ -11,6 +11,7 @@ import { ScheduleModule } from '@nestjs/schedule';
 import { OdooModule } from './odoo/odoo.module';
 import { TimeService } from './time/time.service';
 import { TimeModule } from './time/time.module';
+import { TaskModule } from './task/task.module';
 @Module({
   imports: [
     OrderModule,
@@ -28,6 +29,7 @@ import { TimeModule } from './time/time.module';
     ScheduleModule.forRoot(),
     OdooModule,
     TimeModule,
+    TaskModule,
   ],
   controllers: [],
   providers: [TimeService],
