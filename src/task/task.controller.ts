@@ -94,8 +94,6 @@ export class TaskController {
     try {
       const userLoggedIn = await this.authService.getUserLoggedIn(req);
 
-      console.log({ userLoggedIn });
-
       if (userLoggedIn.userType !== UserType.TECHNICIAN)
         throw new ForbiddenException(
           'You must be a technician to access this route',
