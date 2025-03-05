@@ -1,17 +1,29 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from 'src/common/types/order';
 import { UserService } from 'src/user/user.service';
 import { Permission, User, UserType } from '@prisma/client';
 import { STAGES_IDS } from 'settings.config';
-import { authenticateFromOdoo, searchOdooOrder } from './odooImport/api';
+import {
+  authenticateFromOdoo,
+  getOdooOrderById,
+  searchOdooOrder,
+} from './odooImport/api';
 import { normalizeOrder } from './odooImport/normalizations';
 import { PayloadToken } from 'src/common/types/payload';
+import { ImageService } from 'src/images/images.service';
 
 @Injectable()
 export class OrderService {
-  constructor(private usersService: UserService) {}
+  constructor(
+    private usersService: UserService,
+    private imageService: ImageService,
+  ) {}
 
   async getAllOrders({
     designerId,
@@ -324,7 +336,62 @@ export class OrderService {
     return [];
   }
 
-  async getOrderById(id: number) {}
+  async getOrderById({
+    id,
+    userLoggedIn,
+  }: {
+    id: string;
+    userLoggedIn: PayloadToken;
+  }): Promise<{ order: any; normalizedOrder: Order }> {
+    const currentUserType = userLoggedIn.userType;
+    const UID = await authenticateFromOdoo();
+    const orderFound = await getOdooOrderById(UID, +id);
+
+    //checking if order exists
+    if (!orderFound.length) throw new NotFoundException('Order not found');
+
+    //mapping input odoo object to Order type
+    const normalizedOrder = normalizeOrder(orderFound[0]);
+
+    //extracting tasks that are not assigned to the current user (only if user is a technician)
+    if (currentUserType === UserType.TECHNICIAN) {
+      normalizedOrder.tasks = normalizedOrder.tasks.filter(
+        (task) =>
+          task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
+      );
+    }
+
+    const orderWithTechnicians = (
+      await this.getOrdersWithTechnicians([normalizedOrder])
+    )[0];
+
+    const orderWithDesigners = (
+      await this.getOrdersWithDesigners([orderWithTechnicians])
+    )[0];
+
+    //Getting order images only if directory exists
+    if (orderWithDesigners.directory) {
+      try {
+        const orderImages = await this.imageService.getAllImages(
+          orderWithDesigners.directory,
+        );
+        orderWithDesigners.images = orderImages;
+      } catch (error) {
+        console.error('Error reading images:', error);
+        orderWithDesigners.images = [];
+      }
+    }
+
+    //Add assigner name to each task
+    for (const task of orderWithDesigners.tasks) {
+      if (task.assignedBy) {
+        const assigner = await this.usersService.getUserById(task.assignedBy);
+        if (assigner) task.assignerName = assigner.name;
+      }
+    }
+
+    return { order: orderFound, normalizedOrder: orderWithDesigners };
+  }
 
   async getOrdersWithTechnicians(orders: Order[]): Promise<Order[]> {
     return await Promise.all(

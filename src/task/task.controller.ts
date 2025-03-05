@@ -3,15 +3,18 @@ import {
   ForbiddenException,
   Get,
   NotImplementedException,
+  Param,
   Query,
   Request,
 } from '@nestjs/common';
 import { TaskService } from './task.service';
-import { Task } from 'src/common/types/tasks';
+import { Task, TaskWithOrder } from 'src/common/types/tasks';
 import { ApiBearerAuth, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { AuthService } from 'src/auth/auth.service';
 import { Order } from 'src/common/types/order';
 import { TaskStatusEnum } from './dto/task.dto';
+import { Permissions } from 'src/common/decorators/permissions.decorators';
+import { Permission, UserType } from '@prisma/client';
 
 @Controller('task')
 @ApiTags('Task')
@@ -35,6 +38,7 @@ export class TaskController {
 
   @Get('my-tasks')
   @ApiBearerAuth()
+  @Permissions(Permission.ViewMyTasks)
   @ApiQuery({
     name: 'status',
     enum: TaskStatusEnum,
@@ -44,7 +48,7 @@ export class TaskController {
   async myTasks(
     @Request() req,
     @Query('status') status: TaskStatusEnum,
-  ): Promise<Task[]> {
+  ): Promise<TaskWithOrder[]> {
     try {
       const userLoggedIn = await this.authService.getUserLoggedIn(req);
       const myTasks = await this.taskService.getMyTasks({ userLoggedIn });
@@ -74,6 +78,35 @@ export class TaskController {
       } else {
         return myTasks;
       }
+    } catch (error) {
+      throw new ForbiddenException(error.message);
+    }
+  }
+
+  @Get(':orderId/:taskId')
+  @Permissions(Permission.ViewMyTasks)
+  @ApiBearerAuth()
+  async getTaskByOrderId(
+    @Request() req,
+    @Param('orderId') orderId: string,
+    @Param('taskId') taskId: string,
+  ) {
+    try {
+      const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+      console.log({ userLoggedIn });
+
+      if (userLoggedIn.userType !== UserType.TECHNICIAN)
+        throw new ForbiddenException(
+          'You must be a technician to access this route',
+        );
+      const result = await this.taskService.getTaskByOrderId({
+        userLoggedIn,
+        orderId,
+        taskId,
+      });
+
+      return result;
     } catch (error) {
       throw new ForbiddenException(error.message);
     }

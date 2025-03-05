@@ -138,59 +138,15 @@ export class OrderController {
 
   @Get(':id')
   @Permissions(Permission.ViewOrders)
-  async getOrderById(
-    @Param('id') id: string,
-    @Request() req,
-  ) /* : Promise<Order> */ {
-    const UID = await authenticateFromOdoo();
-    const orderFound = await getOdooOrderById(UID, +id);
-
+  async getOrderById(@Param('id') id: string, @Request() req) {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
-    const currentUserType = userLoggedIn.userType;
-    //checking if order exists
-    if (!orderFound.length) throw new NotFoundException('Order not found');
 
-    //mapping input odoo object to Order type
-    const normalizedOrder = normalizeOrder(orderFound[0]);
+    const { order, normalizedOrder } = await this.orderService.getOrderById({
+      id,
+      userLoggedIn,
+    });
 
-    //extracting tasks that are not assigned to the current user (only if user is a technician)
-    if (currentUserType === UserType.TECHNICIAN) {
-      normalizedOrder.tasks = normalizedOrder.tasks.filter(
-        (task) =>
-          task.technicianId === userLoggedIn.sub && task.status !== 'ON HOLD',
-      );
-    }
-
-    const orderWithTechnicians = (
-      await this.orderService.getOrdersWithTechnicians([normalizedOrder])
-    )[0];
-
-    const orderWithDesigners = (
-      await this.orderService.getOrdersWithDesigners([orderWithTechnicians])
-    )[0];
-
-    //Getting order images only if directory exists
-    if (orderWithDesigners.directory) {
-      try {
-        const orderImages = await this.imageService.getAllImages(
-          orderWithDesigners.directory,
-        );
-        orderWithDesigners.images = orderImages;
-      } catch (error) {
-        console.error('Error reading images:', error);
-        orderWithDesigners.images = [];
-      }
-    }
-
-    //Add assigner name to each task
-    for (const task of orderWithDesigners.tasks) {
-      if (task.assignedBy) {
-        const assigner = await this.usersService.getUserById(task.assignedBy);
-        if (assigner) task.assignerName = assigner.name;
-      }
-    }
-
-    return { order: orderFound, normalizedOrder: orderWithDesigners };
+    return { order, normalizedOrder };
   }
 
   @Get(':id/analytics')

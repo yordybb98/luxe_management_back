@@ -20,7 +20,6 @@ enum Permission {
   UpdateUsers
   DeleteUsers
   ViewAttendances
-  ViewAllTasks
   ViewMyTasks
 }
 

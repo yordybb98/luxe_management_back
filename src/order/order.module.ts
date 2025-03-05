@@ -8,6 +8,7 @@ import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { RoleService } from 'src/role/role.service';
 import { NotificationModule } from 'src/notification/notification.module';
+import { ImageModule } from 'src/images/image.module';
 
 @Module({
   controllers: [OrderController],
@@ -19,7 +20,7 @@ import { NotificationModule } from 'src/notification/notification.module';
     AuthService,
     RoleService,
   ],
-  imports: [PrismaModule, NotificationModule],
+  imports: [PrismaModule, NotificationModule, ImageModule],
   exports: [OrderService],
 })
 export class OrderModule {}
