@@ -803,11 +803,10 @@ export class OrderController {
       //Adding new task to previous tasks
       tasks.push(newTask);
 
-      //Notifying techinician
+      //Notifying technician
       this.notificationService.notifyUser(data.technicianId, {
         type: 'SUCCESS',
         message: `${req.user.username} assigned you a new task`,
-        source: `${data.orderId}`,
       });
 
       //Stringify tasks
