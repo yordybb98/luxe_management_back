@@ -786,12 +786,15 @@ export class OrderController {
 
       const userLoggedIn = await this.authService.getUserLoggedIn(req);
 
+      const userInfo = await this.usersService.getUserById(userLoggedIn.sub);
+
       //Creating new task
       const newTask: Task = {
         id: randomUUID(),
         name: data.name,
         instructions: data.instructions,
         technicianId: data.technicianId,
+        assignerName: userInfo?.name,
         assignedBy: userLoggedIn.sub,
         previousTasks: [],
         nextTasks: [],

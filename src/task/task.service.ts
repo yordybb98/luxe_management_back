@@ -10,10 +10,14 @@ import { Order } from 'src/common/types/order';
 import { PayloadToken } from 'src/common/types/payload';
 import { Task, TaskWithOrder } from 'src/common/types/tasks';
 import { OrderService } from 'src/order/order.service';
+import { UserService } from 'src/user/user.service';
 
 @Injectable()
 export class TaskService {
-  constructor(private readonly orderService: OrderService) {}
+  constructor(
+    private readonly orderService: OrderService,
+    private readonly usersService: UserService,
+  ) {}
 
   async getAllTasks({
     userLoggedIn,
@@ -53,14 +57,26 @@ export class TaskService {
       });
 
       if (total > 0) {
-        myOrders.forEach((order) => {
-          const tasksWithOrderId = order.tasks.map((task) => ({
-            ...task,
-            orderId: order.id, // ✅ Include order ID dynamically
-          }));
+        for (const order of myOrders) {
+          const tasksWithOrderId = await Promise.all(
+            order.tasks.map(async (task) => {
+              if (task.assignedBy && !task.assignerName) {
+                const assigner = await this.usersService.getUserById(
+                  task.assignedBy,
+                );
+                task.assignerName = assigner?.name ?? '-';
+              }
+
+              return {
+                ...task,
+                orderName: order.name,
+                orderId: order.id,
+              };
+            }),
+          );
 
           tasks.push(...tasksWithOrderId);
-        });
+        }
       }
 
       return tasks;

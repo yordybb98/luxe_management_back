@@ -14,6 +14,6 @@ export type Task = {
   status: 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
 };
 
-export type TaskWithOrder = Task & { orderId: number };
+export type TaskWithOrder = Task & { orderId: number; orderName: string };
 
 type TaskSummary = Pick<Task, 'id' | 'name' | 'status' | 'instructions'>;

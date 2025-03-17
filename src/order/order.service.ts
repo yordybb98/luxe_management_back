@@ -384,7 +384,7 @@ export class OrderService {
 
     //Add assigner name to each task
     for (const task of orderWithDesigners.tasks) {
-      if (task.assignedBy) {
+      if (task.assignedBy && !task.assignerName) {
         const assigner = await this.usersService.getUserById(task.assignedBy);
         if (assigner) task.assignerName = assigner.name;
       }
