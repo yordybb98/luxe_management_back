@@ -70,6 +70,7 @@ export class TaskService {
               return {
                 ...task,
                 orderName: order.name,
+                clientName: order.companyName,
                 orderId: order.id,
               };
             }),
@@ -95,20 +96,24 @@ export class TaskService {
     orderId: string;
     taskId: string;
     userLoggedIn: PayloadToken;
-  }): Promise<Order> {
+  }): /* Promise<Order> */ Promise<TaskWithOrder> {
     const { normalizedOrder: order } = await this.orderService.getOrderById({
       id: orderId,
       userLoggedIn,
     });
 
     if (order) {
-      return order;
-      /* const task = order.tasks.find((task) => task.id === taskId);
+      /* 
+      return order; */
+      const task = order.tasks.find((task) => task.id === taskId);
       if (!task) throw new NotFoundException('Task not found');
       return {
         ...task,
         orderId: order.id,
-      }; */
+        clientName: order.companyName,
+        orderName: order.name,
+        orderDirectory: order.directory,
+      };
     } else {
       throw new NotFoundException('Order not found');
     }
