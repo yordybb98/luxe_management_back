@@ -5,6 +5,7 @@ import {
   Delete,
   Get,
   NotFoundException,
+  NotImplementedException,
   Param,
   Patch,
   Post,
@@ -16,7 +17,7 @@ import { Permission, User } from '@prisma/client';
 import { CreateUserDto } from './dto/createUserDto';
 import * as bcrypt from 'bcrypt';
 import { PublicUserData } from './dto/publicUserData';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { AuthGuard } from 'src/auth/guards/auth.guard';
 import { RoleService } from 'src/role/role.service';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
@@ -24,7 +25,9 @@ import { UserResponseDto } from './dto/getAllUsersResponseDto';
 import { ChangePasswordDto } from './dto/changePasswordDto';
 import { NotificationService } from 'src/notification/notification.service';
 import { Order } from 'src/common/types/order';
+import { AuthService } from 'src/auth/auth.service';
 
+@ApiBearerAuth()
 @ApiTags('User')
 @Controller('users')
 export class UserController {
@@ -32,9 +35,11 @@ export class UserController {
     private readonly userService: UserService,
     private readonly roleService: RoleService,
     private readonly notificationService: NotificationService,
+    private readonly authService: AuthService,
   ) {}
 
   @Get()
+  @ApiBearerAuth()
   @Permissions(Permission.ViewUsers)
   async getAllUsers(): Promise<UserResponseDto[]> {
     const users = await this.userService.getAllUsers();
@@ -243,5 +248,34 @@ export class UserController {
   ): Promise<{ canBeDeactivated: boolean; data: Order[] }> {
     const result = await this.userService.havePendingTasks(id);
     return result;
+  }
+
+  @Get('profile/generalInfo')
+  async getGeneralInfo(
+    @Request() req,
+  ): Promise<{ id: number; name: string; lastName: string; email: string }> {
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+    const user = await this.userService.getUserById(userLoggedIn.sub);
+
+    return {
+      id: user.id,
+      name: user.name,
+      lastName: user.lastName,
+      email: user.email,
+    };
+  }
+
+  @Get('profile/displayInfo')
+  async getDisplayInfo(@Request() req): Promise<{ rowsPerPage: number }> {
+    throw new NotImplementedException();
+
+    const userLoggedIn = await this.authService.getUserLoggedIn(req);
+
+    const user = await this.userService.getUserById(userLoggedIn.sub);
+
+    return {
+      rowsPerPage: 0,
+    };
   }
 }
