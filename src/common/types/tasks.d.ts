@@ -1,3 +1,5 @@
+import { Image } from './image';
+
 export type Task = {
   id: string;
   name?: string;
@@ -19,6 +21,7 @@ export type TaskWithOrder = Task & {
   orderName: string;
   orderDirectory?: string;
   clientName?: string;
+  orderImages?: Image[];
 };
 
 type TaskSummary = Pick<Task, 'id' | 'name' | 'status' | 'instructions'>;

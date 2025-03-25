@@ -113,6 +113,7 @@ export class TaskService {
         clientName: order.companyName,
         orderName: order.name,
         orderDirectory: order.directory,
+        orderImages: order.images,
       };
     } else {
       throw new NotFoundException('Order not found');
