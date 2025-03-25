@@ -121,19 +121,18 @@ export class OrderController {
   ): Promise<GetAllOrdersResponseDto> {
     const userLoggedIn = await this.authService.getUserLoggedIn(req);
 
-    const { myOrders, total: totalOrders } =
-      await this.orderService.getMyOrders({
-        designerId,
-        technicianId,
-        search,
-        stageId,
-        page: Number(page) || 1,
-        pageSize: Number(pageSize) || 5,
-        order,
-        userLoggedIn,
-      });
+    const { myOrders, total } = await this.orderService.getMyOrders({
+      designerId,
+      technicianId,
+      search,
+      stageId,
+      page: Number(page) || 1,
+      pageSize: Number(pageSize) || 5,
+      order,
+      userLoggedIn,
+    });
 
-    return { data: myOrders, total: totalOrders };
+    return { data: myOrders, total };
   }
 
   @Get(':id')
