@@ -25,6 +25,7 @@ function normalizeOrder(item: OdooOrder): Order {
     : [];
   const tasks = item.x_studio_tasks ? JSON.parse(item.x_studio_tasks) : [];
   const directory = item.x_studio_directory || '';
+  const deadline = item.x_studio_deadline || null;
   const created_at = item.create_date ? new Date(item.create_date) : null;
   const designerAssigmentDate = item.x_studio_designer_date_assignment
     ? new Date(JSON.parse(item.x_studio_designer_date_assignment))
@@ -49,6 +50,7 @@ function normalizeOrder(item: OdooOrder): Order {
     designersAssignedIds,
     tasks,
     directory,
+    deadline,
     created_at,
     designerAssigmentDate,
     firstAdjustment,

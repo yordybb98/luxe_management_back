@@ -21,6 +21,7 @@ export type Order = {
   designersAssignedIds: number[];
   tasks?: Task[];
   directory: string;
+  deadline?: string;
   created_at: Date;
   designerAssigmentDate: Date;
   firstAdjustment?: string;
@@ -170,4 +171,5 @@ export type OdooOrder = {
   x_studio_second_adjustment_description: string | false;
   x_studio_final_adjustment_check: boolean | false;
   x_studio_final_adjustment_description: string | false;
+  x_studio_deadline: string;
 };
