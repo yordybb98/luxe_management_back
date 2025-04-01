@@ -188,6 +188,9 @@ export class OrderController {
       }
     }
 
+    //Removing deadline from order
+    await updateOdooOrder(UID, +id, 'x_studio_deadline', '');
+
     //Notifying admin
     this.notificationService.notifyAllAdmins({
       type: 'SUCCESS',
