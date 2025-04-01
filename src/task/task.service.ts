@@ -45,8 +45,10 @@ export class TaskService {
 
   async getMyTasks({
     userLoggedIn,
+    order,
   }: {
     userLoggedIn: PayloadToken;
+    order?: string;
   }): Promise<TaskWithOrder[]> {
     if (userLoggedIn.role.permissions.includes(Permission.ViewMyTasks)) {
       const tasks: TaskWithOrder[] = [];
@@ -54,6 +56,7 @@ export class TaskService {
       const { myOrders, total } = await this.orderService.getMyOrders({
         userLoggedIn,
         withoutPagination: true,
+        order,
       });
 
       if (total > 0) {
@@ -69,9 +72,9 @@ export class TaskService {
 
               return {
                 ...task,
-                orderName: order.name,
                 clientName: order.companyName,
                 orderId: order.id,
+                orderDeadline: order.deadline,
               };
             }),
           );
@@ -103,17 +106,15 @@ export class TaskService {
     });
 
     if (order) {
-      /* 
-      return order; */
       const task = order.tasks.find((task) => task.id === taskId);
       if (!task) throw new NotFoundException('Task not found');
       return {
         ...task,
         orderId: order.id,
         clientName: order.companyName,
-        orderName: order.name,
         orderDirectory: order.directory,
         orderImages: order.images,
+        orderDeadline: order.deadline,
       };
     } else {
       throw new NotFoundException('Order not found');

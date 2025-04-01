@@ -18,10 +18,10 @@ export type Task = {
 
 export type TaskWithOrder = Task & {
   orderId: number;
-  orderName: string;
   orderDirectory?: string;
   clientName?: string;
   orderImages?: Image[];
+  orderDeadline?: string;
 };
 
 type TaskSummary = Pick<Task, 'id' | 'name' | 'status' | 'instructions'>;

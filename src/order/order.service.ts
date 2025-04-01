@@ -171,6 +171,7 @@ export class OrderService {
     pageSize,
     userLoggedIn,
     withoutPagination,
+    order,
   }: {
     designerId?: string;
     technicianId?: string;
@@ -272,7 +273,7 @@ export class OrderService {
         dynamicDomain: combinedDomain,
         page,
         limit: pageSize,
-        order: 'x_studio_designer_date_assignment DESC',
+        order: order ?? 'x_studio_designer_date_assignment DESC',
         withoutPagination,
       });
       orders = data;
@@ -296,6 +297,7 @@ export class OrderService {
           dynamicDomain: combinedDomain,
           page,
           limit: pageSize,
+          order: order ?? 'x_studio_deadline ASC',
           withoutPagination,
         });
         orders = data;

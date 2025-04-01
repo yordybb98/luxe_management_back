@@ -47,11 +47,15 @@ export class TaskController {
   })
   async myTasks(
     @Request() req,
+    @Query('order') order: string,
     @Query('status') status: TaskStatusEnum,
   ): Promise<TaskWithOrder[]> {
     try {
       const userLoggedIn = await this.authService.getUserLoggedIn(req);
-      const myTasks = await this.taskService.getMyTasks({ userLoggedIn });
+      const myTasks = await this.taskService.getMyTasks({
+        userLoggedIn,
+        order,
+      });
       if (status === TaskStatusEnum.COMPLETED) {
         const completedTasks = myTasks.filter(
           (task) => task.status === 'COMPLETED',
