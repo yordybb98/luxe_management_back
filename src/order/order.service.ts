@@ -58,7 +58,13 @@ export class OrderService {
         );
       } else {
         combinedDomain.push(
-          ['x_studio_designers_assigned', 'ilike', designerId], // Filter by specific designer ID
+        '|', // OR logic
+        ['x_studio_designers_assigned', '=', `[${designerId}]`], // Exact match for a single value
+        '|', // Additional OR logic
+        ['x_studio_designers_assigned', 'like', `[${designerId},%`], // Check if starts with [9,
+        '|',
+        ['x_studio_designers_assigned', 'like', `,%${designerId},%`], // Check for middle occurrences
+        ['x_studio_designers_assigned', 'like', `,%${designerId}]`], // Check if ends with ,9]);
         );
       }
     }
