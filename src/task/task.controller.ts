@@ -64,7 +64,7 @@ export class TaskController {
         return completedTasks;
       } else if (status === TaskStatusEnum.IN_PROGRESS) {
         const pendingTasks = myTasks.filter(
-          (task) => task.status !== 'COMPLETED' && task.status !== 'ON HOLD',
+          (task) => task.status === 'IN-PROGRESS',
         );
 
         return pendingTasks;
