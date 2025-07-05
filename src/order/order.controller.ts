@@ -12,7 +12,6 @@ import {
   Query,
   Request,
   UseInterceptors,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
@@ -25,7 +24,6 @@ import {
   getOdooOrderById,
   getOrderOdooStageDurations,
   getOrderOdooStageTimeline,
-  searchOdooOrder,
   updateOdooOrder,
 } from './odooImport/api';
 import {
@@ -35,7 +33,6 @@ import {
   EditDesignerAssigmentDto,
 } from './dto/assign-order.dto';
 import { JwtService } from '@nestjs/jwt';
-import { Order } from 'src/common/types/order';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
 import {
