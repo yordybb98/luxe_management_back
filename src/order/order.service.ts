@@ -58,13 +58,13 @@ export class OrderService {
         );
       } else {
         combinedDomain.push(
-        '|', // OR logic
-        ['x_studio_designers_assigned', '=', `[${designerId}]`], // Exact match for a single value
-        '|', // Additional OR logic
-        ['x_studio_designers_assigned', 'like', `[${designerId},%`], // Check if starts with [9,
-        '|',
-        ['x_studio_designers_assigned', 'like', `,%${designerId},%`], // Check for middle occurrences
-        ['x_studio_designers_assigned', 'like', `,%${designerId}]`], // Check if ends with ,9]);
+          '|', // OR logic
+          ['x_studio_designers_assigned', '=', `[${designerId}]`], // Exact match for a single value
+          '|', // Additional OR logic
+          ['x_studio_designers_assigned', 'like', `[${designerId},%`], // Check if starts with [9,
+          '|',
+          ['x_studio_designers_assigned', 'like', `,%${designerId},%`], // Check for middle occurrences
+          ['x_studio_designers_assigned', 'like', `,%${designerId}]`], // Check if ends with ,9]);
         );
       }
     }
@@ -105,7 +105,37 @@ export class OrderService {
     }
 
     // Filtering orders based on stageId param
-    if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
+    if (+stageId === STAGES_IDS.ACTIVE) {
+      combinedDomain.push(
+        '&',
+        '&',
+        ['stage_id', '!=', STAGES_IDS.ON_HOLD],
+        ['stage_id', '!=', STAGES_IDS.COBRADO],
+        ['stage_id', '!=', STAGES_IDS.FINISHED],
+      );
+    } else if (+stageId === STAGES_IDS.IN_PROGRESS) {
+      combinedDomain.push(
+        '&',
+        '&',
+        '&',
+        '&',
+        '&',
+        '&',
+        '&',
+        '&',
+        '&',
+        ['stage_id', '!=', STAGES_IDS.REQUEST],
+        ['stage_id', '!=', STAGES_IDS.QUOTATION],
+        ['stage_id', '!=', STAGES_IDS.QUOTATION_SENT],
+        ['stage_id', '!=', STAGES_IDS.WON],
+        ['stage_id', '!=', STAGES_IDS.ANTICIPO],
+        ['stage_id', '!=', STAGES_IDS.ON_HOLD],
+        ['stage_id', '!=', STAGES_IDS.INSTALLATION],
+        ['stage_id', '!=', STAGES_IDS.FINISHED],
+        ['stage_id', '!=', STAGES_IDS.COBRADO],
+        ['stage_id', '!=', STAGES_IDS.SERVICE_CALLS],
+      );
+    } else if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
     //Filtering only Luxe Graphics orders
     combinedDomain.push(['company_id', '=', 1]);

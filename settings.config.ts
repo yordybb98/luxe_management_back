@@ -15,6 +15,8 @@ export const settings = {
 
 // ODOO STAGES IDS
 export const STAGES_IDS = {
+  ACTIVE: -2,
+  IN_PROGRESS: -1,
   REQUEST: 1,
   QUOTATION: 2,
   QUOTATION_SENT: 3,
