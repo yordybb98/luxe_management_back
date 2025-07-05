@@ -13,6 +13,7 @@ export type Task = {
   isActive: boolean;
   updatedAt?: Date;
   dateFinished?: Date;
+  cancelledBy?: string;
   status: 'IN-PROGRESS' | 'COMPLETED' | 'CANCELLED' | 'ON HOLD';
 };
 

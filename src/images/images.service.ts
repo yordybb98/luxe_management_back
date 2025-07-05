@@ -180,27 +180,42 @@ export class ImageService {
       const decodedPath = decodeURIComponent(folderPath);
 
       const previewPath = pathLib.join(decodedPath, 'Preview');
+      const finalArtPath = pathLib.join(decodedPath, 'Arte Final');
 
-      if (!fs.existsSync(previewPath)) {
-        throw new Error('Preview folder not found');
-      }
+      const getImagesFrom = (directory: string): string[] => {
+        if (!fs.existsSync(directory)) return [];
 
-      const files = fs.readdirSync(previewPath);
+        const files = fs.readdirSync(directory);
 
-      const imageFiles = files.filter((file) => {
         const regex = new RegExp(
           `\\.(${SUPPORTED_IMAGE_EXTENSIONS.join('|')})$`,
           'i',
         );
-        return regex.test(file);
-      }); // Filter image files
 
-      return imageFiles.map((file) => {
-        const newFilePath = pathLib.join(previewPath, file);
-        const encodedPath = encodeURIComponent(newFilePath);
+        return files
+          .filter((file) => regex.test(file))
+          .map((file) => pathLib.join(directory, file));
+      };
+
+      // 1. Try to get Preview images
+      let imagePaths = getImagesFrom(previewPath);
+
+      // 2. If there are no Preview images, try to get Arte Final images
+      if (imagePaths.length === 0) {
+        imagePaths = getImagesFrom(finalArtPath);
+      }
+
+      if (imagePaths.length === 0) {
+        throw new Error('No images found in Preview or Arte Final');
+      }
+
+      // 3. Return the image paths
+      return imagePaths.map((filePath) => {
+        const encodedPath = encodeURIComponent(filePath);
+        const alt = pathLib.basename(filePath);
         return {
-          alt: file,
-          src: `${encodedPath}`, // Keep the full path approach
+          alt,
+          src: encodedPath,
         };
       });
     } catch (error) {

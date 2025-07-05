@@ -457,11 +457,11 @@ export class OrderController {
   ): Promise<Task[]> {
     const UID = await authenticateFromOdoo();
 
-    //Founding order
+    //Finding order
     const orderFound = await getOdooOrderById(UID, +orderId);
     if (!orderFound) throw new NotFoundException('Order not found');
 
-    //Founding task
+    //Finding task
     const normalizedOrder = normalizeOrder(orderFound[0]);
     const tasks = normalizedOrder.tasks;
     const taskFound = tasks.find((task) => task.id === taskId);
@@ -469,6 +469,7 @@ export class OrderController {
 
     //Editing task
     taskFound.status = 'CANCELLED';
+    taskFound.cancelledBy = req.user.username;
     taskFound.updatedAt = new Date();
 
     //Removing technician assignment from task if there is not any other uncompleted task assigned to the same designer
