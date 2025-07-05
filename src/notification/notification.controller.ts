@@ -1,6 +1,5 @@
 import { Controller, Get, Param, Post, Put, Request } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
-import { Public } from 'src/common/guards/public.guard';
 import { NotificationService } from 'src/notification/notification.service';
 
 @ApiTags('Notifications')

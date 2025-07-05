@@ -206,7 +206,7 @@ export class ImageService {
       }
 
       if (imagePaths.length === 0) {
-        throw new Error('No images found in Preview or Arte Final');
+        console.warn('No images found in Preview or Arte Final');
       }
 
       // 3. Return the image paths

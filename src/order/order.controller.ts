@@ -17,7 +17,6 @@ import { OrderService } from './order.service';
 // import { Order } from '@prisma/client';
 import { UserService } from 'src/user/user.service';
 import { ApiTags } from '@nestjs/swagger';
-import { CreateOrderDto } from './dto/create-order.dto';
 import { Permissions } from 'src/common/decorators/permissions.decorators';
 import {
   authenticateFromOdoo,
@@ -542,12 +541,21 @@ export class OrderController {
 
       //Removing duplicates
       const uniqueDesignerAssignedIds = new Set(designerAssignedIds);
+      const uniqueDesignersHistory = new Set(
+        order.normalizedOrder.designersHistory,
+      ); //Unique designers history
 
       //Adding designer
       uniqueDesignerAssignedIds.add(data.designerId);
+      uniqueDesignersHistory.add(data.designerId); //Adding designer to history
 
+      //Stringify designers assigned as array
       const parsedDesignerAssignedIds = JSON.stringify([
         ...uniqueDesignerAssignedIds,
+      ]);
+      //Stringify designers history as array
+      const parsedDesignersHistory = JSON.stringify([
+        ...uniqueDesignersHistory,
       ]);
 
       //Assigning designer
@@ -556,6 +564,16 @@ export class OrderController {
         data.orderId,
         'x_studio_designers_assigned',
         parsedDesignerAssignedIds,
+      );
+
+      console.log(parsedDesignersHistory);
+
+      //Assigning designers history
+      await updateOdooOrder(
+        uid,
+        data.orderId,
+        'x_studio_designersHistory',
+        parsedDesignersHistory,
       );
 
       //Assignation Date

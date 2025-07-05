@@ -28,6 +28,7 @@ export type Order = {
   secondAdjustment?: string;
   finalAdjustment?: string;
   images?: Image[];
+  designersHistory: number[];
 };
 
 export type OdooOrder = {
@@ -172,4 +173,5 @@ export type OdooOrder = {
   x_studio_final_adjustment_check: boolean | false;
   x_studio_final_adjustment_description: string | false;
   x_studio_deadline: string;
+  x_studio_designersHistory: string;
 };

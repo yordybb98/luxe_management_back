@@ -33,6 +33,9 @@ function normalizeOrder(item: OdooOrder): Order {
   const firstAdjustment = item.x_studio_first_adjustment_description || '';
   const secondAdjustment = item.x_studio_second_adjustment_description || '';
   const finalAdjustment = item.x_studio_final_adjustment_description || '';
+  const designersHistory = item.x_studio_designersHistory
+    ? JSON.parse(item.x_studio_designersHistory)
+    : [];
 
   return {
     id,
@@ -56,6 +59,7 @@ function normalizeOrder(item: OdooOrder): Order {
     firstAdjustment,
     secondAdjustment,
     finalAdjustment,
+    designersHistory,
   };
 }
 
