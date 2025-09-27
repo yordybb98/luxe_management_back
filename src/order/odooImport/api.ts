@@ -285,6 +285,13 @@ const searchOdooOrder = async ({
 }): Promise<{ data: OdooOrder[]; total: number }> => {
   try {
     const offset = (page - 1) * limit;
+
+    const m = /^companyName\s+(ASC|DESC)$/i.exec(order || '');
+    const effectiveOrder = m ? `partner_id ${m[1].toUpperCase()}` : order;
+    const kwargs = withoutPagination
+      ? { order: effectiveOrder }
+      : { offset, limit, order: effectiveOrder };
+
     const orders = (await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -295,7 +302,7 @@ const searchOdooOrder = async ({
           'crm.lead', // Model
           'search_read', // Method (search_read)
           [dynamicDomain], // Dynamic domain filter
-          withoutPagination ? { order } : { offset, limit, order }, // Dynamic fields
+          kwargs, // Dynamic fields
         ],
         (err, orders) => {
           if (err) {
