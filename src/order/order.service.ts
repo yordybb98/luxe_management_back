@@ -8,7 +8,7 @@ import { CreateOrderDto } from './dto/create-order.dto';
 import { Order } from 'src/common/types/order';
 import { UserService } from 'src/user/user.service';
 import { Permission, User, UserType } from '@prisma/client';
-import { STAGES_IDS } from 'settings.config';
+import { ARTIFICIAL_STAGES_FILTERS, STAGES_IDS } from 'settings.config';
 import {
   authenticateFromOdoo,
   getOdooOrderById,
@@ -17,6 +17,7 @@ import {
 import { normalizeOrder } from './odooImport/normalizations';
 import { PayloadToken } from 'src/common/types/payload';
 import { ImageService } from 'src/images/images.service';
+import { buildOdooFilterDomain } from 'src/utils/buildOdooFilterDomain';
 
 @Injectable()
 export class OrderService {
@@ -107,33 +108,11 @@ export class OrderService {
     // Filtering orders based on stageId param
     if (+stageId === STAGES_IDS.ACTIVE) {
       combinedDomain.push(
-        '&',
-        '&',
-        ['stage_id', '!=', STAGES_IDS.ON_HOLD],
-        ['stage_id', '!=', STAGES_IDS.COBRADO],
-        ['stage_id', '!=', STAGES_IDS.FINISHED],
+        ...buildOdooFilterDomain(ARTIFICIAL_STAGES_FILTERS.ACTIVE),
       );
     } else if (+stageId === STAGES_IDS.IN_PROGRESS) {
       combinedDomain.push(
-        '&',
-        '&',
-        '&',
-        '&',
-        '&',
-        '&',
-        '&',
-        '&',
-        '&',
-        ['stage_id', '!=', STAGES_IDS.REQUEST],
-        ['stage_id', '!=', STAGES_IDS.QUOTATION],
-        ['stage_id', '!=', STAGES_IDS.QUOTATION_SENT],
-        ['stage_id', '!=', STAGES_IDS.WON],
-        ['stage_id', '!=', STAGES_IDS.ANTICIPO],
-        ['stage_id', '!=', STAGES_IDS.ON_HOLD],
-        ['stage_id', '!=', STAGES_IDS.INSTALLATION],
-        ['stage_id', '!=', STAGES_IDS.FINISHED],
-        ['stage_id', '!=', STAGES_IDS.COBRADO],
-        ['stage_id', '!=', STAGES_IDS.SERVICE_CALLS],
+        ...buildOdooFilterDomain(ARTIFICIAL_STAGES_FILTERS.IN_PROGRESS),
       );
     } else if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
@@ -145,6 +124,8 @@ export class OrderService {
 
     //Authenticating Odoo
     const UID = await authenticateFromOdoo();
+
+    console.log('AUTENTICANDOSEEEEEEE');
 
     //Getting orders from odoo based on user role
     const currentUserType = userLoggedIn.userType;
@@ -172,7 +153,6 @@ export class OrderService {
         'You do not have permission to view all orders.',
       );
     }
-
     const normalizedOrders = orders.map((order) => normalizeOrder(order));
 
     //extracting tasks that are not assigned to the current user (only if user is a technician)

@@ -16,8 +16,11 @@ export class CommonController {
   async getStages(@Request() req, @Query('team_id') team_id) {
     const uid = await authenticateFromOdoo();
     const stages = (await getOdooStages(uid, +team_id)) as Stage[];
-
-    return stages;
+    const artificialStage: Stage[] = [
+      { id: -2, name: 'Active' },
+      { id: -1, name: 'In Progress' },
+    ];
+    return [...artificialStage, ...stages];
   }
 
   @Get('teams')

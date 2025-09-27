@@ -566,8 +566,6 @@ export class OrderController {
         parsedDesignerAssignedIds,
       );
 
-      console.log(parsedDesignersHistory);
-
       //Assigning designers history
       await updateOdooOrder(
         uid,

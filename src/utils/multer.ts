@@ -8,7 +8,6 @@ export const multerOptions = {
     destination: async (req, file, callback) => {
       try {
         const path = req.headers.path as string;
-        console.log(req.headers);
         const dynamicPath =
           await getDynamicPath(
             path,
@@ -45,7 +44,6 @@ export const multerOptions = {
 };
 
 async function getDynamicPath(path: string): Promise<string> {
-  console.log({ path });
   const baseDirectory = '\\\\LUXE_BACKUP\\Luxe Files\\DEVELOP';
   const folderPath = join(baseDirectory, path, `Preview`);
 
