@@ -6,6 +6,7 @@ export type Task = {
   instructions: string;
   assignedBy?: number;
   assignerName?: string;
+  technicianName?: string;
   technicianId: number;
   dateAssigned: Date;
   previousTasks?: TaskSummary[];

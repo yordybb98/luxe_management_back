@@ -803,11 +803,15 @@ export class OrderController {
 
       const userInfo = await this.usersService.getUserById(userLoggedIn.sub);
 
+      //Getting Technician Name
+      const technician = await this.usersService.getUserById(data.technicianId);
+
       //Creating new task
       const newTask: Task = {
         id: randomUUID(),
         name: data.name,
         instructions: data.instructions,
+        technicianName: technician?.name,
         technicianId: data.technicianId,
         assignerName: userInfo?.name,
         assignedBy: userLoggedIn.sub,
@@ -874,10 +878,14 @@ export class OrderController {
 
       const userLoggedIn = await this.authService.getUserLoggedIn(req);
 
+      //Getting Task Assigner Name
+      const technician = await this.usersService.getUserById(data.technicianId);
+
       //Creating new SubTask
       const newSubtask: Task = {
         id: randomUUID(),
         name: data.name,
+        technicianName: technician?.name,
         technicianId: data.technicianId,
         assignedBy: userLoggedIn.sub,
         previousTasks: [

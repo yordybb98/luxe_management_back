@@ -406,6 +406,13 @@ export class OrderService {
         const assigner = await this.usersService.getUserById(task.assignedBy);
         if (assigner) task.assignerName = assigner.name;
       }
+
+      if (task.technicianId && !task.technicianName) {
+        const technician = await this.usersService.getUserById(
+          task.technicianId,
+        );
+        if (technician) task.technicianName = technician.name;
+      }
     }
 
     return { order: orderFound, normalizedOrder: orderWithDesigners };
