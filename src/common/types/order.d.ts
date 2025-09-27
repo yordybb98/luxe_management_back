@@ -103,8 +103,8 @@ export type OdooOrder = {
   date_deadline: boolean | false;
   partner_id: (number | string)[];
   partner_is_blacklisted: boolean;
-  contact_name: boolean | false;
-  partner_name: string;
+  contact_name: string | false;
+  partner_name: string | false;
   function: boolean | false;
   title: boolean | false;
   email_from: string;

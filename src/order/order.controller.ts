@@ -34,12 +34,7 @@ import {
 import { JwtService } from '@nestjs/jwt';
 import { normalizeOrder } from './odooImport/normalizations';
 import { randomUUID } from 'crypto';
-import {
-  cancelTasks,
-  createFolders,
-  groupDurationsByStage,
-  sanitizePathName,
-} from 'src/utils/utils';
+import { cancelTasks, groupDurationsByStage } from 'src/utils/utils';
 import {
   settings,
   STAGES_IDS,
@@ -54,9 +49,13 @@ import { ImageService } from 'src/images/images.service';
 import { AuthService } from 'src/auth/auth.service';
 import { join } from 'path';
 import { NotificationService } from 'src/notification/notification.service';
-import { Public } from '../common/guards/public.guard';
 const path = require('path');
 import * as fs from 'fs';
+import {
+  createFolders,
+  createUniqueDirectory,
+  sanitizePathName,
+} from 'src/utils/directoryHandlers';
 
 @ApiTags('Order')
 @Controller('order')
@@ -952,6 +951,7 @@ export class OrderController {
   @Post(':orderId/createDirectory')
   async createDirectory(@Request() req, @Param('orderId') orderId: string) {
     const order = await this.getOrderById(orderId, req);
+
     const BASE_DIR = settings.BASE_ROOT_DIRECTORY;
     const currentYear = new Date().getFullYear().toString();
     const orderName = order.normalizedOrder.name;
@@ -962,15 +962,17 @@ export class OrderController {
       currentYear,
       sanitizePathName(orderName),
     );
-
     try {
-      for (const folder of settings.FOLDERS_STRUCTURE) {
-        await createFolders(path.join(ORDER_PATH, folder));
-      }
+      const finalOrderPath = await createUniqueDirectory(ORDER_PATH);
+      await createFolders(finalOrderPath, settings.FOLDERS_STRUCTURE);
       const uid = await authenticateFromOdoo();
-      await updateOdooOrder(uid, +orderId, 'x_studio_directory', ORDER_PATH);
-
-      return ORDER_PATH;
+      await updateOdooOrder(
+        uid,
+        +orderId,
+        'x_studio_directory',
+        finalOrderPath,
+      );
+      return finalOrderPath;
     } catch (err) {
       console.error({ err });
       throw new ServiceUnavailableException('Could not create directory');

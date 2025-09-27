@@ -13,7 +13,9 @@ function normalizeOrder(item: OdooOrder): Order {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
   } as Stage;
-  const companyName = (item.partner_id[1] as string) || '';
+  const companyName =
+    (!!item.partner_name ? item.partner_name : (item.contact_name as string)) ||
+    '';
   const email = item.email_from || '';
   const phone = item.phone || '';
   const mobile = item.mobile || '';
