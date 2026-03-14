@@ -13,6 +13,9 @@ function normalizeOrder(item: OdooOrder): Order {
     id: item.stage_id?.[0],
     name: item.stage_id?.[1],
   } as Stage;
+  const lastStageUpdated = item.date_last_stage_update
+    ? new Date(item.date_last_stage_update)
+    : null;
   const companyName =
     (!!item.partner_name ? item.partner_name : (item.contact_name as string)) ||
     '';
@@ -45,6 +48,7 @@ function normalizeOrder(item: OdooOrder): Order {
     description,
     techniciansAssignedId,
     stage,
+    lastStageUpdated,
     companyName,
     email,
     phone,

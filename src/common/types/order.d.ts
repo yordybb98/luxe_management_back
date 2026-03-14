@@ -10,6 +10,7 @@ export type Order = {
   techniciansAssigned?: User[];
   techniciansAssignedId?: number[];
   stage: Stage;
+  lastStageUpdated: Date;
   companyName: string;
   email: string;
   phone: string;
