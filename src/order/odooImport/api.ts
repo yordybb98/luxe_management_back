@@ -202,6 +202,54 @@ const getOdooStages = async (uid: number, team_id?: number) => {
   }
 };
 
+//TODO: ORGANIZE THIS, TYPE IT SHOULDNT BE HERE, ALSO THE SUBTYPE SHOULD BE ENUM
+type OdooMessageSubtype = 'note' | 'comment';
+
+const postOdooLeadMessageWithAttachments = async (
+  uid: number,
+  leadId: number,
+  body: string,
+  attachmentIds: number[] = [],
+  subtype: OdooMessageSubtype = 'note',
+): Promise<number | null> => {
+  try {
+    const subtypeXmlId =
+      subtype === 'comment' ? 'mail.mt_comment' : 'mail.mt_note';
+
+    const result = await new Promise<number>((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db,
+          uid,
+          password,
+          'crm.lead',
+          'message_post',
+          [[leadId]],
+          {
+            body,
+            message_type: 'comment',
+            subtype_xmlid: subtypeXmlId,
+            attachment_ids: attachmentIds,
+          },
+        ],
+        (err: unknown, response: number) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(response);
+          }
+        },
+      );
+    });
+
+    return result;
+  } catch (err) {
+    console.error('Error posting Odoo lead message with attachments:', err);
+    return null;
+  }
+};
+
 const getOdooTeams = async (uid) => {
   try {
     const teams = await new Promise((resolve, reject) => {
@@ -645,6 +693,113 @@ export const getOrdersByStages = async (stageIds: number[]) => {
   return result;
 };
 
+//TODO Organizar types, deberia estar en otro lado, y el subtype deberia ser enum
+type OdooAttachmentCreateParams = {
+  uid: number;
+  fileName: string;
+  base64Data: string;
+  mimetype: string;
+  resModel?: string;
+  resId?: number;
+};
+
+const createOdooAttachment = async ({
+  uid,
+  fileName,
+  base64Data,
+  mimetype,
+  resModel = 'crm.lead',
+  resId,
+}: OdooAttachmentCreateParams): Promise<number | null> => {
+  try {
+    const attachmentId = await new Promise<number>((resolve, reject) => {
+      modelsClient.methodCall(
+        'execute_kw',
+        [
+          db,
+          uid,
+          password,
+          'ir.attachment',
+          'create',
+          [
+            {
+              name: fileName,
+              type: 'binary',
+              datas: base64Data,
+              mimetype,
+              res_model: resModel,
+              ...(resId ? { res_id: resId } : {}),
+            },
+          ],
+        ],
+        (err: unknown, response: number) => {
+          if (err) {
+            reject(err);
+          } else {
+            resolve(response);
+          }
+        },
+      );
+    });
+
+    return attachmentId;
+  } catch (err) {
+    console.error('Error creating Odoo attachment:', err);
+    return null;
+  }
+};
+
+type PostLeadFileMessageParams = {
+  uid: number;
+  leadId: number;
+  body: string;
+  fileName: string;
+  base64Data: string;
+  mimetype: string;
+  subtype?: 'note' | 'comment';
+};
+
+const postOdooLeadFileMessage = async ({
+  uid,
+  leadId,
+  body,
+  fileName,
+  base64Data,
+  mimetype,
+  subtype = 'note',
+}: PostLeadFileMessageParams): Promise<{
+  attachmentId: number | null;
+  messageId: number | null;
+}> => {
+  try {
+    const attachmentId = await createOdooAttachment({
+      uid,
+      fileName,
+      base64Data,
+      mimetype,
+      resModel: 'crm.lead',
+      resId: leadId,
+    });
+
+    if (!attachmentId) {
+      return { attachmentId: null, messageId: null };
+    }
+
+    const messageId = await postOdooLeadMessageWithAttachments(
+      uid,
+      leadId,
+      body,
+      [attachmentId],
+      subtype,
+    );
+
+    return { attachmentId, messageId };
+  } catch (err) {
+    console.error('Error posting Odoo lead file message:', err);
+    return { attachmentId: null, messageId: null };
+  }
+};
+
 export {
   authenticateFromOdoo,
   getOdooVersion,
@@ -660,4 +815,7 @@ export {
   getOrderOdooStageDurations,
   getOrderOdooStageTimeline,
   getOrderStageTimeStamp,
+  postOdooLeadMessageWithAttachments,
+  createOdooAttachment,
+  postOdooLeadFileMessage,
 };
