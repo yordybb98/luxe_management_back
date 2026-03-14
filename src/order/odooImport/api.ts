@@ -173,7 +173,7 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
 
 const getOdooStages = async (uid: number, team_id?: number) => {
   try {
-    const filterDomain = team_id ? [[['team_id', '=', team_id]]] : [];
+    const filterDomain = team_id ? [['team_ids', 'in', [team_id]]] : [];
     const stages = await new Promise((resolve, reject) => {
       modelsClient.methodCall(
         'execute_kw',
@@ -183,7 +183,7 @@ const getOdooStages = async (uid: number, team_id?: number) => {
           password,
           'crm.stage',
           'search_read',
-          filterDomain,
+          [filterDomain],
           { fields: ['name'] },
         ],
         (err, stages) => {
