@@ -116,8 +116,8 @@ export class OrderService {
       );
     } else if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
-    //Filtering only Luxe Graphics orders
-    combinedDomain.push(['company_id', '=', 1]);
+    //Filtering only Luxe Graphics Cape Coral & Lehigh Acres orders
+    combinedDomain.push('|', ['company_id', '=', 1], ['company_id', '=', 1629]);
 
     let orders = [];
     let totalOrders = 0;
@@ -257,8 +257,8 @@ export class OrderService {
     // Filtering orders based on stageId param
     if (stageId) combinedDomain.push(['stage_id', '=', +stageId]);
 
-    //Filtering only Luxe Graphics orders
-    combinedDomain.push(['company_id', '=', 1]);
+    //Filtering only Luxe Graphics Cape Coral & Lehigh Acres orders
+    combinedDomain.push('|', ['company_id', '=', 1], ['company_id', '=', 1629]);
 
     let orders = [];
     let totalOrders = 0;

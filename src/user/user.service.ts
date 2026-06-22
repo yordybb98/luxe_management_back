@@ -190,7 +190,9 @@ export class UserService {
 
       // Dominio para filtrar tanto diseñadores como técnicos
       const combinedDomain = [
-        ['company_id', '=', 1],
+        ['company_id', '=', 1], //Cape Coral Company
+        '|',
+        ['company_id', '=', 1629], //Lehigh Acres Company
         '|',
         ['x_studio_designers_assigned', '=', `[${userId}]`], // Exact match
         '|',

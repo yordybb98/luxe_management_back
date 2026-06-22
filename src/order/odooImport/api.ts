@@ -151,7 +151,9 @@ const getOdooOrderById = async (uid: number, id: number): Promise<any> => {
           [
             [
               ['id', '=', id],
-              ['company_id', '=', 1],
+              '|',
+              ['company_id', '=', 1], //Cape Coral Company
+              ['company_id', '=', 1629], //Lehigh Acres Company
             ],
           ],
         ],

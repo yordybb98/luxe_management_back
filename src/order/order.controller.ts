@@ -701,17 +701,17 @@ export class OrderController {
       } */
 
       // **Delete previous images from 'Preview' directory**
-      if (fs.existsSync(previewDir)) {
+     /*  if (fs.existsSync(previewDir)) {
         fs.readdirSync(previewDir).forEach((file) => {
           const filePath = join(previewDir, file);
           if (fs.lstatSync(filePath).isFile()) {
             fs.unlinkSync(filePath);
           }
         });
-      }
+      } */
 
       //Saving original and resizedWaterMark images
-      const filePaths = await Promise.all(
+     /*  const filePaths = await Promise.all(
         files.map(async (file) => {
           try {
             return await this.imageService.resizeAndSaveImage(
@@ -725,9 +725,9 @@ export class OrderController {
             );
           }
         }),
-      );
+      ); */
 
-      console.log(`Proposal uploaded SUCCESSfully to`, { filePaths });
+      console.log(`Proposal uploaded SUCCESSfully to`, order.normalizedOrder.directory );
 
       //Authenticating Odoo
       const uid = await authenticateFromOdoo();
